@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int                  @id @default(autoincrement())
+  email           String?              @unique // email is optional for some users
+  phoneNumber     String?              @unique // phone number is optional but unique
+  password        String
+  isVerified      Boolean              @default(false) // Overall user verification status
+  isAdmin         Boolean              @default(false)
+  emailVerified   Boolean              @default(false) // Email verification status
+  phoneVerified   Boolean              @default(false) // Phone verification status
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  deletedAt       DateTime?            // Soft delete option (optional, no default)
+
+  // Relations
+  userVerifications UserVerification[] // Relationship to UserVerification
+  userPasswordHistory UserPasswordHistory[] // Relationship to UserPasswordHistory
+
+  // Index for faster lookups
+  @@index([email, phoneNumber])
+}
+
+model UserVerification {
+  id                Int               @id @default(autoincrement())
+  userId            Int
+  verificationType  VerificationType
+  token             String            @unique
+  expiresAt         DateTime
+  createdAt         DateTime          @default(now())
+  isUsed            Boolean           @default(false)
+
+  // Foreign key relationship
+  user              User              @relation(fields: [userId], references: [id])
+
+  // Index for userId to speed up lookups
+  @@index([userId])
+}
+
+enum VerificationType {
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  FORGOT_PASSWORD
+  CHANGE_PASSWORD
+  CHANGE_EMAIL
+  CHANGE_PHONE
+  MFA_SETUP
+}
+
+model UserPasswordHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  password  String   // Store hashed passwords
+  createdAt DateTime @default(now())
+
+  // Foreign key relationship
+  user      User     @relation(fields: [userId], references: [id])
+
+  // Index for userId to speed up queries
+  @@index([userId])
+}
