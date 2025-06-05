@@ -20,7 +20,7 @@ const COMMON_RATE_LIMIT_MAX_REQUESTS = envManager.getAsNumber('COMMON_RATE_LIMIT
 const COMMON_RATE_LIMIT_WINDOW_MS = envManager.getAsNumber('COMMON_RATE_LIMIT_WINDOW_MS', 1000);
 const CLUSTER_ENABLED = envManager.getAsBoolean('CLUSTER_ENABLED', false);
 const CLUSTER_COUNT = envManager.getAsNumber('CLUSTER_COUNT', 1);
-const ALLOWED_ORIGINS = envManager.get('ALLOWED_ORIGINS', 1);
+const ALLOWED_ORIGINS = envManager.get('ALLOWED_ORIGINS', '*');
 
 export const env = {
     NODE_ENV,

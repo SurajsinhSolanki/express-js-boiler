@@ -4,11 +4,11 @@ import type { ZodError, ZodSchema } from 'zod';
 
 import { ServiceResponse } from '@/common/models/serviceResponse';
 
-export const handleServiceResponse = (serviceResponse: ServiceResponse<unknown>, response: Response) => {
-    return response.status(serviceResponse.statusCode).send(serviceResponse);
+export const handleServiceResponse = (serviceResponse: ServiceResponse<unknown>, response: Response): void => {
+    response.status(serviceResponse.statusCode).send(serviceResponse);
 };
 
-export const validateRequest = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
+export const validateRequest = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction): void => {
     try {
         schema.parse({ body: req.body, query: req.query, params: req.params });
         next();
