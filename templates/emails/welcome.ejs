@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Welcome Email</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+        font-family: Arial, sans-serif;
+      }
+      .email-container {
+        max-width: 600px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+      p {
+        color: #555;
+        line-height: 1.6;
+      }
+      .button {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 20px;
+        background-color: #4caf50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .footer {
+        margin-top: 30px;
+        font-size: 12px;
+        color: #999;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <h1>Welcome, <%= userName %>!</h1>
+      <p>Hi <%= userName %>,</p>
+      <p>
+        Thank you for joining <%= appName %>! We're excited to have you. Please
+        confirm your email address by clicking the button below.
+      </p>
+      <a href="<%= verificationLink %>" class="button">Verify Email</a>
+      <p>If you didn’t sign up for this account, just ignore this message.</p>
+
+      <div class="footer">
+        &copy; <%= new Date().getFullYear() %> <%= appName %>. All rights
+        reserved.
+      </div>
+    </div>
+  </body>
+</html>
+

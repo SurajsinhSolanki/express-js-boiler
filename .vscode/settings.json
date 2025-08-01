@@ -1,17 +1,14 @@
 {
     "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-        "source.fixAll": "explicit",
-        "source.fixAll.biome": "explicit",
-        "source.organizeImports.biome": "explicit"
-    },
-    "[javascript][typescript][json][jsonc]": {
-        "editor.defaultFormatter": "biomejs.biome"
+        "source.fixAll": "explicit"
     },
     "[github-actions-workflow][markdown][xml][yaml]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"
-    }
+    },
+    "cSpell.words": ["asteasolutions", "Solanki", "Surajsinh"]
 }

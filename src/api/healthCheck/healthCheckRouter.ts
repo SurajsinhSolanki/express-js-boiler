@@ -13,10 +13,14 @@ healthCheckRegistry.registerPath({
     method: 'get',
     path: '/health-check',
     tags: ['Health Check'],
-    responses: createApiResponse(z.null(), 'Success'),
+    responses: createApiResponse(z.null(), 'Success')
 });
 
 healthCheckRouter.get('/', (_req: Request, res: Response) => {
-    const serviceResponse = ServiceResponse.success('Service is healthy', null);
+    const serviceResponse = ServiceResponse.success('Service is healthy', {
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+
     return handleServiceResponse(serviceResponse, res);
 });
