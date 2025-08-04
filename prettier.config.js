@@ -7,5 +7,6 @@ export default {
     trailingComma: 'none',
     bracketSpacing: true,
     endOfLine: 'lf',
-    semi: true
+    semi: true,
+    arrowParens: 'avoid'
 };
