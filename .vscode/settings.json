@@ -10,5 +10,5 @@
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
   },
-  "cSpell.words": ["asteasolutions", "Solanki", "Surajsinh"]
+  "cSpell.words": ["asteasolutions", "Luxon", "njsproj", "ntvs", "smhd", "Solanki", "sonarqube", "Surajsinh"]
 }
