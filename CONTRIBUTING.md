@@ -152,7 +152,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) for clari
 - `fix` – Bug fix
 - `docs` – Documentation only changes
 - `style` – Formatting, missing semi-colons, etc; no code change
-- `refactor` – Code change that neither fixes a bug nor adds a feature
+- `ref` – Code change that neither fixes a bug nor adds a feature
 - `perf` – Performance improvements
 - `test` – Adding or fixing tests
 - `chore` – Maintenance tasks

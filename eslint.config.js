@@ -3,18 +3,37 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
 export default [
-    eslintRecommended.configs.recommended,
+  eslintRecommended.configs.recommended,
 
-    ...tseslint.configs.recommended, // includes parser + plugin
+  ...tseslint.configs.recommended, // includes parser + plugin
 
-    {
-        rules: {
-            '@typescript-eslint/no-explicit-any': 'off'
-        }
-    },
-
-    {
-        name: 'Prettier',
-        rules: prettier.rules
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off'
     }
+  },
+
+  {
+    name: 'Prettier',
+    rules: prettier.rules
+  },
+  {
+    ignores: [
+      'coverage',
+      'node_modules',
+      'dist',
+      'build',
+      'dist-ssr',
+      '*.local',
+      '.env',
+      'generated/prisma',
+      '.idea',
+      '.DS_Store',
+      '*.suo',
+      '*.ntvs*',
+      '*.njsproj',
+      '*.sln',
+      '*.sw?'
+    ]
+  }
 ];
