@@ -5,3 +5,6 @@
 agenda
 argon2
 Luxon / Day.js
+
+for code coverage
+npx vitest run --coverage
