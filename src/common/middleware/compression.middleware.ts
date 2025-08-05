@@ -1,27 +1,22 @@
-import compression from "compression";
-import { env } from "@/common/utils/envConfig";
-import { NextFunction, Request, Response } from "express";
+import compression from 'compression';
+import { ENV } from '@/common/utils/config';
+import { NextFunction, Request, Response } from 'express';
 
-const compressionMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (env.NODE_ENV === "development") {
+const compressionMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (ENV.NODE_ENV === 'development') {
     return next();
   }
 
   compression({
     threshold: 1024, // Only compress responses larger than 1KB
     filter: (req, res) => {
-      if (req.headers["x-no-compression"]) {
+      if (req.headers['x-no-compression']) {
         return false;
       }
       return compression.filter(req, res);
     },
-    level: 6, // Compression level (0-9)
+    level: 6 // Compression level (0-9)
   })(req, res, next);
 };
 
 export default compressionMiddleware;
-

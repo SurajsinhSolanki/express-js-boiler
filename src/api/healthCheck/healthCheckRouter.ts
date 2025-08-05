@@ -10,17 +10,17 @@ export const healthCheckRegistry = new OpenAPIRegistry();
 export const healthCheckRouter: Router = express.Router();
 
 healthCheckRegistry.registerPath({
-    method: 'get',
-    path: '/health-check',
-    tags: ['Health Check'],
-    responses: createApiResponse(z.null(), 'Success')
+  method: 'get',
+  path: '/health-check',
+  tags: ['Health Check'],
+  responses: createApiResponse(z.null(), 'Success')
 });
 
 healthCheckRouter.get('/', (_req: Request, res: Response) => {
-    const serviceResponse = ServiceResponse.success('Service is healthy', {
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString()
-    });
+  const serviceResponse = ServiceResponse.success('Service is healthy', {
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
 
-    return handleServiceResponse(serviceResponse, res);
+  return handleServiceResponse(serviceResponse, res);
 });

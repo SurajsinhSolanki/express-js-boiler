@@ -1,4 +1,4 @@
-import helmet from "helmet";
+import helmet from 'helmet';
 
 const helmetMiddleware = helmet({
   contentSecurityPolicy: {
@@ -7,18 +7,17 @@ const helmetMiddleware = helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'"],
       fontSrc: ["'self'"],
-      imgSrc: ["'self'"],
-    },
+      imgSrc: ["'self'"]
+    }
   },
   xssFilter: true,
   noSniff: true,
-  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   hsts: {
     maxAge: 31536000, // 1 year in seconds
     includeSubDomains: true,
-    preload: true,
-  },
+    preload: true
+  }
 });
 
 export default helmetMiddleware;
-

@@ -1,7 +1,7 @@
 import 'express';
 
 declare module 'express' {
-    interface Request {
-        id?: string;
-    }
+  interface Request {
+    id?: string;
+  }
 }
