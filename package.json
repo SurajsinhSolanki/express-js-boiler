@@ -5,8 +5,7 @@
   "author": "Surajsinh",
   "repository": "SurajsinhSolanki/express-js-boiler",
   "license": "MIT",
-  "main": "index.ts",
-  "type": "module",
+  "main": "dist/index.js",
   "private": true,
   "scripts": {
     "build": "tsup",
@@ -18,14 +17,20 @@
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist",
     "sample-env": "generate-sample-env .env example.env",
-    "seed": "ts-node prisma/seeds/seed.ts",
     "prepare": "husky install",
     "coverage": "vitest run --coverage",
-    "sonar": "npm run coverage && sonar-scanner"
+    "sonar": "npm run coverage && sonar-scanner",
+    "migrate:dev": "npx prisma migrate dev",
+    "migrate": "npx prisma migrate deploy",
+    "generate": "npx prisma generate",
+    "reset": "npx prisma migrate reset --force",
+    "seed": "ts-node prisma/seeds/seed.ts",
+    "studio": "npx prisma studio",
+    "test": "vitest"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "7.3.0",
-    "@prisma/client": "^6.5.0",
+    "@prisma/client": "^6.13.0",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
     "cors": "2.8.5",
@@ -37,7 +42,6 @@
     "morgan": "^1.10.1",
     "pino": "9.6.0",
     "pino-http": "10.4.0",
-    "prisma": "^6.5.0",
     "swagger-ui-express": "5.0.1",
     "vitest": "^3.2.4",
     "zod": "3.24.2"
@@ -61,6 +65,7 @@
     "nodemon": "^3.1.10",
     "pino-pretty": "13.0.0",
     "prettier": "^3.6.2",
+    "prisma": "^6.13.0",
     "sonarqube-scanner": "^4.3.0",
     "supertest": "7.1.0",
     "ts-node": "^10.9.2",
@@ -87,7 +92,7 @@
     "sourcemap": true,
     "clean": true,
     "format": [
-      "esm"
+      "cjs"
     ]
   }
 }

@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const seedUsers = async () => {
@@ -21,7 +21,7 @@ export const seedUsers = async () => {
         email: 'admin@mail.com',
         phoneNumber: '9876543210',
         password: await bcrypt.hash('Test@123', 10), // Hash the password
-        isVerified: false,
+        isVerified: true,
         isAdmin: true,
         emailVerified: false,
         phoneVerified: false

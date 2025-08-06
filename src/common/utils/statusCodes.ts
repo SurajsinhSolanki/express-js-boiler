@@ -58,21 +58,3 @@ export const StatusCodes = {
   INSUFFICIENT_STORAGE: 507,
   NETWORK_AUTHENTICATION_REQUIRED: 511
 };
-
-export const ReasonPhrases: Record<number, string> = Object.fromEntries(
-  Object.entries(StatusCodes).map(([key, value]) => [value, key.replace(/_/g, ' ')])
-);
-
-export function getReasonPhrase(statusCode: number): string {
-  return ReasonPhrases[statusCode] || 'Unknown Status Code';
-}
-
-export function getStatusCode(reasonPhrase: string): number | undefined {
-  const phrase = reasonPhrase.toUpperCase().replace(/ /g, '_');
-  return (StatusCodes as any)[phrase];
-}
-
-// Example usage
-// response.status(StatusCodes.OK).send(ReasonPhrases[StatusCodes.OK]);
-// response.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ error: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) });
-// response.status(getStatusCode('Internal Server Error')!).send({ error: 'Internal Server Error' });
