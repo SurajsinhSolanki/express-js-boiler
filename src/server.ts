@@ -9,9 +9,14 @@ import compressionMiddleware from './common/middleware/compression.middleware';
 import corsMiddleware from './common/middleware/cors.middleware';
 import helmetMiddleware from './common/middleware/helmet.middleware';
 import requestLoggerMiddleware from '@/common/middleware/requestLogger';
+import { metricsMiddleware } from './api/monitoring/metrics.middleware';
+import metricsRouter from './api/monitoring/metrics.controller';
 
 const logger = pino({ name: 'server start' });
 const app: Express = express();
+
+app.use(metricsMiddleware);
+app.use('/api', metricsRouter);
 
 // Set the application to trust the reverse proxy
 app.set('trust proxy', true);
@@ -28,8 +33,8 @@ app.use(rateLimiter);
 app.use(...requestLoggerMiddleware());
 
 // Routes
-app.use('/health-check', healthCheckRouter);
-app.use('/users', userRouter);
+app.use('/api/health-check', healthCheckRouter);
+app.use('/api/v1/users', userRouter);
 
 // Swagger UI
 app.use(openAPIRouter);

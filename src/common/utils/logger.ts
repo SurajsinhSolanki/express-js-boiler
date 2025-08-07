@@ -1,6 +1,6 @@
 import pino from 'pino';
 import { ENV, loggerConfig } from '@/common/utils/config';
-import { cwd } from 'node:process';
+import { getFilename } from './filenameUtils';
 
 // Define log levels
 const logLevels = {
@@ -58,7 +58,11 @@ const productionConfig: pino.LoggerOptions = {
       targets: [
         {
           target: 'pino/file',
-          options: { destination: loggerConfig.filename(cwd()), mkdir: true }
+          level: 'error',
+          options: {
+            destination: getFilename({ subDir: '/logs', dateFormat: 'yyyy-MM-dd', suffix: 'error', extension: 'log' }),
+            mkdir: true
+          }
         },
         {
           target: 'pino-pretty',

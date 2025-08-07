@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { createApiResponse } from '@/api-docs/openAPIResponseBuilders';
 import { GetUserSchema, UserSchema } from '@/api/user/userModel';
+import { API_ROUTES, VERSION_1 } from '@/common/utils/apiRoutes';
 import { validateRequest } from '@/common/utils/httpHandlers';
 import { userController } from './userController';
 
@@ -14,7 +15,7 @@ userRegistry.register('User', UserSchema);
 
 userRegistry.registerPath({
   method: 'get',
-  path: '/users',
+  path: VERSION_1 + API_ROUTES.USERS,
   tags: ['User'],
   responses: createApiResponse(z.array(UserSchema), 'Success')
 });
@@ -23,7 +24,7 @@ userRouter.get('/', userController.getUsers);
 
 userRegistry.registerPath({
   method: 'get',
-  path: '/users/{id}',
+  path: VERSION_1 + API_ROUTES.USERS + '/{id}',
   tags: ['User'],
   request: { params: GetUserSchema.shape.params },
   responses: createApiResponse(UserSchema, 'Success')

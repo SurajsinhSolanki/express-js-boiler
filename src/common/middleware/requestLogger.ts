@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import morgan from 'morgan';
 import { createChildLogger, logSecurityEvent, logPerformance } from '../utils/logger';
 import { ENV } from '@/common/utils/config';
+import { restResponseTimeHistogram } from '../utils/prometheus';
 
 // Request logger instance
 const requestLogger = createChildLogger('http-request');
@@ -21,8 +22,7 @@ morgan.token('real-ip', (req: Request) => {
 });
 
 morgan.token('user-id', (req: Request) => {
-  // Assuming you have user info in req.user
-  return (req as any).user?.id || 'anonymous';
+  return String(req.user?.userId || 'anonymous');
 });
 
 morgan.token('correlation-id', (req: Request) => {
@@ -153,6 +153,16 @@ const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
+    // Observe Prometheus metrics
+    restResponseTimeHistogram.observe(
+      {
+        method: req.method,
+        route: req.route?.path || req.url,
+        status_code: res.statusCode
+      },
+      duration / 1000 // Convert to seconds
+    );
+
     // Call original end with all provided arguments
     return originalEnd.apply(this, args as any);
   } as typeof res.end;
@@ -220,9 +230,9 @@ const errorLogger = (error: Error, req: Request, res: Response, next: NextFuncti
       message: error.message,
       stack: error.stack
     },
-    body: !ENV.NODE_ENV === 'production' ? req.body : undefined,
-    query: !ENV.NODE_ENV === 'production' ? req.query : undefined,
-    params: !ENV.NODE_ENV === 'production' ? req.params : undefined
+    body: ENV.NODE_ENV !== 'production' ? req.body : undefined,
+    query: ENV.NODE_ENV !== 'production' ? req.query : undefined,
+    params: ENV.NODE_ENV !== 'production' ? req.params : undefined
   };
 
   requestLogger.error(errorData, `Request error: ${error.message}`);
