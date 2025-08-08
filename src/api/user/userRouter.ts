@@ -31,3 +31,53 @@ userRegistry.registerPath({
 });
 
 userRouter.get('/:id', validateRequest(GetUserSchema), userController.getUser);
+
+userRegistry.registerPath({
+  method: 'get',
+  path: VERSION_1 + API_ROUTES.USERS + '/email/{email}',
+  tags: ['User'],
+  request: { params: GetUserSchema.shape.params },
+  responses: createApiResponse(UserSchema, 'Success')
+});
+
+userRouter.get('/email/:email', validateRequest(GetUserSchema), userController.findByEmail);
+
+userRegistry.registerPath({
+  method: 'get',
+  path: VERSION_1 + API_ROUTES.USERS + '/phone-number/{phoneNumber}',
+  tags: ['User'],
+  request: { params: GetUserSchema.shape.params },
+  responses: createApiResponse(UserSchema, 'Success')
+});
+
+userRouter.get('/phone-number/:phoneNumber', validateRequest(GetUserSchema), userController.findByPhoneNumber);
+
+userRegistry.registerPath({
+  method: 'post',
+  path: VERSION_1 + API_ROUTES.USERS,
+  tags: ['User'],
+  request: { body: { content: { 'application/json': { schema: UserSchema } } } },
+  responses: createApiResponse(UserSchema, 'Success')
+});
+
+userRouter.post('/', validateRequest(UserSchema), userController.createUser);
+
+userRegistry.registerPath({
+  method: 'put',
+  path: VERSION_1 + API_ROUTES.USERS + '/{id}',
+  tags: ['User'],
+  request: { body: { content: { 'application/json': { schema: UserSchema } } } },
+  responses: createApiResponse(UserSchema, 'Success')
+});
+
+userRouter.put('/:id', validateRequest(UserSchema), userController.updateUser);
+
+userRegistry.registerPath({
+  method: 'delete',
+  path: VERSION_1 + API_ROUTES.USERS + '/{id}',
+  tags: ['User'],
+  request: { params: GetUserSchema.shape.params },
+  responses: createApiResponse(UserSchema, 'Success')
+});
+
+userRouter.delete('/:id', validateRequest(GetUserSchema), userController.deleteUser);

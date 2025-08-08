@@ -46,6 +46,77 @@ export class UserService {
       return ServiceResponse.failure('An error occurred while finding user.', null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
+
+  // Retrieves a single user by their email
+  async findByEmail(email: string): Promise<ServiceResponse<User | null>> {
+    try {
+      this.userLogger.info(`Finding user with email ${email}`);
+      const user = await this.userRepository.findByEmailAsync(email);
+      if (!user) {
+        return ServiceResponse.failure('User not found', null, StatusCodes.NOT_FOUND);
+      }
+      return ServiceResponse.success<User>('User found', user);
+    } catch (ex) {
+      const errorMessage = `Error finding user with email ${email}:, ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure('An error occurred while finding user.', null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // Retrieves a single user by their phone number
+  async findByPhoneNumber(phoneNumber: string): Promise<ServiceResponse<User | null>> {
+    try {
+      this.userLogger.info(`Finding user with phone number ${phoneNumber}`);
+      const user = await this.userRepository.findByPhoneNumberAsync(phoneNumber);
+      if (!user) {
+        return ServiceResponse.failure('User not found', null, StatusCodes.NOT_FOUND);
+      }
+      return ServiceResponse.success<User>('User found', user);
+    } catch (ex) {
+      const errorMessage = `Error finding user with phone number ${phoneNumber}:, ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure('An error occurred while finding user.', null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // Creates a new user
+  async create(user: User): Promise<ServiceResponse<User | null>> {
+    try {
+      this.userLogger.info(`Creating user with email ${user.email}`);
+      const createdUser = await this.userRepository.createAsync(user);
+      return ServiceResponse.success<User>('User created', createdUser);
+    } catch (ex) {
+      const errorMessage = `Error creating user with email ${user.email}:, ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure('An error occurred while creating user.', null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // Updates an existing user
+  async update(id: number, user: User): Promise<ServiceResponse<User | null>> {
+    try {
+      this.userLogger.info(`Updating user with id ${id}`);
+      const updatedUser = await this.userRepository.updateAsync(id, user);
+      return ServiceResponse.success<User>('User updated', updatedUser);
+    } catch (ex) {
+      const errorMessage = `Error updating user with id ${id}:, ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure('An error occurred while updating user.', null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // Deletes a user by their ID
+  async delete(id: number): Promise<ServiceResponse<User | null>> {
+    try {
+      this.userLogger.info(`Deleting user with id ${id}`);
+      const deletedUser = await this.userRepository.deleteAsync(id);
+      return ServiceResponse.success<User>('User deleted', deletedUser);
+    } catch (ex) {
+      const errorMessage = `Error deleting user with id ${id}:, ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure('An error occurred while deleting user.', null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
 
 export const userService = new UserService();
