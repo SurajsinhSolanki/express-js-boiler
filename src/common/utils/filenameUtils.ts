@@ -4,16 +4,16 @@ import { formatDate as luxonFormatDate } from './dateHelper';
 import { DateTime } from 'luxon';
 
 interface FilenameOptions {
-  subDir: string; // Subdirectory under base (required)
-  extension: string; // File extension (required)
-  filenameWithoutExtension?: string; // Custom filename
-  baseDir?: string; // Base directory or undefined
-  prefix?: string; // Filename prefix or undefined
-  suffix?: string; // Filename suffix or undefined
-  dateFormat?: string; // Luxon date format tokens or undefined (default: 'yyyy-MM-dd')
-  separator?: string; // Separator between parts or undefined (default: '_')
-  timestamp?: Date | string | DateTime; // Accepts multiple date formats
-  mkdir?: boolean; // Auto-create directories (default: true)
+  subDir: string;
+  extension: string;
+  filenameWithoutExtension?: string;
+  baseDir?: string;
+  prefix?: string;
+  suffix?: string;
+  dateFormat?: string;
+  separator?: string;
+  timestamp?: Date | string | DateTime;
+  mkdir?: boolean;
 }
 
 /**
@@ -49,21 +49,17 @@ export const getFilename = async (options: FilenameOptions): Promise<string> => 
     mkdir = true
   } = options;
 
-  // Use Luxon for date handling
   let datePart = undefined;
   if (dateFormat) {
     datePart = luxonFormatDate(timestamp, dateFormat);
   }
 
-  // Build filename parts
   const parts = [prefix, filenameWithoutExtension, datePart, suffix].filter(Boolean).join(separator);
 
-  // Clean extension (remove leading dot if present)
   const cleanExtension = extension.replace(/^\./, '');
   const fullFilename = `${parts}.${cleanExtension}`;
   const fullPath = path.join(baseDir, subDir, fullFilename);
 
-  // Create directory if needed
   if (mkdir) {
     await fs.mkdir(path.dirname(fullPath), { recursive: true }).catch(() => {});
   }

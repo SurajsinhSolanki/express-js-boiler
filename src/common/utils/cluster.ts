@@ -10,12 +10,10 @@ export const createCluster = (startServer: () => void) => {
     logger.info(`Primary process ${process.pid} is running`);
     logger.info(`Starting ${clusterCount} worker(s)`);
 
-    // Fork workers for each CPU
     for (let i = 0; i < clusterCount; i++) {
       cluster.fork();
     }
 
-    // Handle worker exit
     cluster.on('exit', (worker, code, signal) => {
       logger.warn(`Worker ${worker.process.pid} died with code ${code} and signal ${signal}`);
       if (code !== 0) {

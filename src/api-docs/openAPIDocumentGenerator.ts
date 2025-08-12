@@ -5,6 +5,13 @@ import { userRegistry } from '@/api/user/userRouter';
 
 export function generateOpenAPIDocument() {
   const registry = new OpenAPIRegistry([healthCheckRegistry, userRegistry]);
+
+  registry.registerComponent('securitySchemes', 'BearerAuth', {
+    type: 'http',
+    scheme: 'bearer',
+    bearerFormat: 'JWT'
+  });
+
   const generator = new OpenApiGeneratorV3(registry.definitions);
 
   return generator.generateDocument({
@@ -14,6 +21,7 @@ export function generateOpenAPIDocument() {
       title: 'Swagger API'
     },
     servers: [{ url: '/api' }],
+    security: [{ BearerAuth: [] }],
     externalDocs: {
       description: 'View the raw OpenAPI Specification in JSON format',
       url: '/swagger.json'

@@ -20,9 +20,9 @@ prisma.$use(async (params: any, next: any) => {
   databaseResponseTimeHistogram.observe(
     {
       operation: params.model ? `${params.model}.${params.action}` : params.action,
-      success: result !== null && result !== undefined ? 'true' : 'false' // Convert boolean to string
+      success: result !== null && result !== undefined ? 'true' : 'false'
     },
-    duration / 1000 // Convert to seconds
+    duration / 1000
   );
 
   return result;

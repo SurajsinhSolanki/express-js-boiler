@@ -27,8 +27,8 @@ model User {
   deletedAt       DateTime?            // Soft delete option (optional, no default)
 
   // Relations
-  userVerifications UserVerification[] // Relationship to UserVerification
-  userPasswordHistory UserPasswordHistory[] // Relationship to UserPasswordHistory
+  userVerifications UserVerification[]
+  userPasswordHistory UserPasswordHistory[]
 
   // Index for faster lookups
   @@index([email, phoneNumber])

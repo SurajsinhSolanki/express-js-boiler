@@ -14,6 +14,7 @@ healthCheckRegistry.registerPath({
   method: 'get',
   path: API_ROUTES.HEALTH_CHECK,
   tags: ['Health Check'],
+  security: [],
   responses: createApiResponse(z.null(), 'Success')
 });
 

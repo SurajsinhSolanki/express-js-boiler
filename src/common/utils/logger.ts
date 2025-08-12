@@ -2,7 +2,6 @@ import pino from 'pino';
 import { ENV, loggerConfig } from '@/common/utils/config';
 import { getFilename } from './filenameUtils';
 
-// Define log levels
 const logLevels = {
   fatal: 60,
   error: 50,
@@ -12,14 +11,11 @@ const logLevels = {
   trace: 10
 };
 
-// Base logger configuration
 const baseConfig: pino.LoggerOptions = {
   level: ENV.LOG_LEVEL || (ENV.NODE_ENV === 'production' ? 'info' : 'debug'),
 
-  // Custom levels if needed
   customLevels: logLevels,
 
-  // Redact sensitive information
   redact: {
     paths: [
       'req.headers.authorization',
@@ -37,10 +33,8 @@ const baseConfig: pino.LoggerOptions = {
     remove: true
   },
 
-  // Format timestamp
   timestamp: pino.stdTimeFunctions.isoTime,
 
-  // Serializers for common objects
   serializers: {
     req: pino.stdSerializers.req,
     res: pino.stdSerializers.res,
@@ -48,11 +42,9 @@ const baseConfig: pino.LoggerOptions = {
   }
 };
 
-// Production configuration - optimized for performance and structured logs
 const productionConfig: pino.LoggerOptions = {
   ...baseConfig,
 
-  // Use destinations for better performance
   ...(loggerConfig.enableFile && {
     transport: {
       targets: [
@@ -66,14 +58,13 @@ const productionConfig: pino.LoggerOptions = {
         },
         {
           target: 'pino-pretty',
-          options: { destination: 1 } // stdout
+          options: { destination: 1 }
         }
       ]
     }
   })
 };
 
-// Development configuration - pretty printed for readability
 const developmentConfig: pino.LoggerOptions = {
   ...baseConfig,
 
@@ -90,15 +81,12 @@ const developmentConfig: pino.LoggerOptions = {
   }
 };
 
-// Create logger instance
 const logger = pino(ENV.NODE_ENV === 'production' ? productionConfig : developmentConfig);
 
-// Child logger factory for different modules
 export const createChildLogger = (module: string, context?: Record<string, any>) => {
   return logger.child({ module, ...context });
 };
 
-// Typed logger interface for better development experience
 export interface Logger {
   trace: (obj: any, msg?: string) => void;
   debug: (obj: any, msg?: string) => void;
@@ -109,7 +97,6 @@ export interface Logger {
   child: (bindings: Record<string, any>) => Logger;
 }
 
-// Error logging helper
 export const logError = (error: Error, context?: Record<string, any>) => {
   logger.error(
     {
@@ -121,7 +108,6 @@ export const logError = (error: Error, context?: Record<string, any>) => {
   );
 };
 
-// Performance logging helper
 export const logPerformance = (operation: string, duration: number, context?: Record<string, any>) => {
   logger.info(
     {
@@ -134,7 +120,6 @@ export const logPerformance = (operation: string, duration: number, context?: Re
   );
 };
 
-// Business logic logging helper
 export const logBusinessEvent = (event: string, data?: Record<string, any>) => {
   logger.info(
     {
@@ -146,7 +131,6 @@ export const logBusinessEvent = (event: string, data?: Record<string, any>) => {
   );
 };
 
-// Security logging helper
 export const logSecurityEvent = (event: string, context?: Record<string, any>) => {
   logger.warn(
     {
@@ -158,7 +142,6 @@ export const logSecurityEvent = (event: string, context?: Record<string, any>) =
   );
 };
 
-// Audit logging helper
 export const logAudit = (action: string, userId?: string, resource?: string, context?: Record<string, any>) => {
   logger.info(
     {

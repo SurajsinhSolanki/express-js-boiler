@@ -5,10 +5,8 @@ import { createChildLogger, logSecurityEvent, logPerformance } from '../utils/lo
 import { ENV } from '@/common/utils/config';
 import { restResponseTimeHistogram } from '../utils/prometheus';
 
-// Request logger instance
 const requestLogger = createChildLogger('http-request');
 
-// Custom Morgan tokens
 morgan.token('id', (req: Request) => req.id || 'unknown');
 morgan.token('real-ip', (req: Request) => {
   return (
@@ -33,10 +31,8 @@ morgan.token('body', (req: Request) => {
   if (ENV.NODE_ENV === 'production') return '';
   if (!req.body || Object.keys(req.body).length === 0) return '';
 
-  // Create a copy to avoid mutating original
   const sanitizedBody = { ...req.body };
 
-  // Remove sensitive fields
   const sensitiveFields = ['password', 'token', 'secret', 'apiKey', 'api_key', 'authorization'];
   sensitiveFields.forEach(field => {
     if (sanitizedBody[field]) {
@@ -65,7 +61,6 @@ morgan.token('request-size', (req: Request) => {
   return req.get('Content-Length') || '0';
 });
 
-// Create structured log format
 const createLogData = (tokens: any, req: Request, res: Response) => {
   const responseTime = parseFloat(tokens['response-time'](req, res));
   const statusCode = parseInt(tokens.status(req, res));
@@ -96,23 +91,18 @@ const createLogData = (tokens: any, req: Request, res: Response) => {
   return baseData;
 };
 
-// Request logging middleware
 const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
 
-  // Generate or use existing request ID
   const existingId = req.headers['x-request-id'] as string;
   const requestId = existingId || randomUUID();
   req.id = requestId;
 
-  // Set response headers
   res.setHeader('X-Request-Id', requestId);
 
-  // Handle correlation ID for distributed tracing
   const correlationId = (req.headers['x-correlation-id'] as string) || requestId;
   res.setHeader('X-Correlation-Id', correlationId);
 
-  // Log request start
   requestLogger.debug(
     {
       requestId,
@@ -126,13 +116,11 @@ const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) =>
     `Incoming request: ${req.method} ${req.url}`
   );
 
-  // Override res.end to capture final response
   const originalEnd = res.end;
   res.end = function (this: any, ...args: any[]) {
     const endTime = Date.now();
     const duration = endTime - startTime;
 
-    // Log performance if it's slow
     if (duration > 1000) {
       logPerformance(`HTTP ${req.method} ${req.url}`, duration, {
         requestId,
@@ -141,7 +129,6 @@ const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
-    // Log security events
     if (res.statusCode === 401 || res.statusCode === 403) {
       logSecurityEvent('Authentication/Authorization failure', {
         requestId,
@@ -153,29 +140,25 @@ const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
-    // Observe Prometheus metrics
     restResponseTimeHistogram.observe(
       {
         method: req.method,
         route: req.route?.path || req.url,
         status_code: res.statusCode
       },
-      duration / 1000 // Convert to seconds
+      duration / 1000
     );
 
-    // Call original end with all provided arguments
     return originalEnd.apply(this, args as any);
   } as typeof res.end;
 
   next();
 };
 
-// Morgan logger with Pino integration
 const morganLogger = morgan(
   (tokens, req: Request, res: Response) => {
     const logData = createLogData(tokens, req, res);
 
-    // Don't return anything - we'll handle logging in the stream
     return JSON.stringify(logData);
   },
   {
@@ -185,10 +168,8 @@ const morganLogger = morgan(
           const logData = JSON.parse(message.trim());
           const { statusCode, responseTime, method, url } = logData;
 
-          // Create log message
           const logMessage = `${method} ${url} - ${statusCode} (${responseTime}ms)`;
 
-          // Determine log level and method based on status code
           if (statusCode >= 500) {
             requestLogger.error(logData, logMessage);
           } else if (statusCode >= 400) {
@@ -199,15 +180,12 @@ const morganLogger = morgan(
             requestLogger.info(logData, logMessage);
           }
         } catch (error) {
-          // Fallback logging
           requestLogger.error({ error: (error as Error).message }, 'Failed to parse Morgan log data');
         }
       }
     },
 
-    // Skip certain requests
     skip: (req: Request) => {
-      // Skip health checks and metrics in production
       if (ENV.NODE_ENV === 'production') {
         const skipPaths = ['/health-check', '/health', '/metrics', '/ping', '/favicon.ico'];
         return skipPaths.some(path => req.url?.startsWith(path));
@@ -217,7 +195,6 @@ const morganLogger = morgan(
   }
 );
 
-// Error logging middleware
 const errorLogger = (error: Error, req: Request, res: Response, next: NextFunction) => {
   const errorData = {
     requestId: req.id,
@@ -240,7 +217,6 @@ const errorLogger = (error: Error, req: Request, res: Response, next: NextFuncti
   next(error);
 };
 
-// Export middleware array
 const requestLoggerMiddleware = () => {
   return [requestIdMiddleware, morganLogger];
 };

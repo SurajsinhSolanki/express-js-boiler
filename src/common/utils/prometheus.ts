@@ -15,8 +15,4 @@ export const databaseResponseTimeHistogram = new client.Histogram({
 export function startMetricsServer() {
   const collectDefaultMetrics = client.collectDefaultMetrics;
   collectDefaultMetrics();
-
-  // You can expose the metrics endpoint in your server.ts or a dedicated metrics server
-  // For now, we'll just ensure default metrics are collected.
-  // The actual endpoint will be added in server.ts
 }

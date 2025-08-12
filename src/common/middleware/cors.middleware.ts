@@ -21,7 +21,7 @@ const corsMiddleware = (req: Request, res: Response, next: NextFunction) => {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     exposedHeaders: ['X-Request-ID'],
     credentials: true,
-    maxAge: 86400 // 24 hours
+    maxAge: 86400
   })(req, res, next);
 };
 

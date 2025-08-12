@@ -5,16 +5,14 @@ import { metricsService } from './metrics.service';
 let lastStatsUpdate = Date.now();
 
 export const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const start = process.hrtime(); // high-resolution timer
+  const start = process.hrtime();
 
-  // Hook into response finish
   res.on('finish', () => {
     const [seconds, nanoseconds] = process.hrtime(start);
     const durationInSeconds = seconds + nanoseconds / 1e9;
 
     const route = req.route?.path || req.path || 'unknown';
 
-    // Skip metrics endpoint itself
     if (route.startsWith(API_ROUTES.MONITORING_METRICS)) return;
 
     metricsService.recordHttpRequest(req.method, route, res.statusCode, durationInSeconds);

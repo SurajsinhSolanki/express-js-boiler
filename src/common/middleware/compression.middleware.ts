@@ -8,14 +8,14 @@ const compressionMiddleware = (req: Request, res: Response, next: NextFunction) 
   }
 
   compression({
-    threshold: 1024, // Only compress responses larger than 1KB
+    threshold: 1024,
     filter: (req, res) => {
       if (req.headers['x-no-compression']) {
         return false;
       }
       return compression.filter(req, res);
     },
-    level: 6 // Compression level (0-9)
+    level: 6
   })(req, res, next);
 };
 

@@ -1,8 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from '@/common/utils/statusCodes';
-import type { ZodError, ZodSchema } from 'zod';
+import { ZodError, type ZodSchema } from 'zod';
 
 import { ServiceResponse } from '@/common/models/serviceResponse';
+import { createChildLogger } from '@/common/utils/logger';
+
+const logger = createChildLogger('http-handlers');
 
 export const handleServiceResponse = (serviceResponse: ServiceResponse<unknown>, response: Response): void => {
   response.status(serviceResponse.statusCode).send(serviceResponse);
@@ -10,14 +13,31 @@ export const handleServiceResponse = (serviceResponse: ServiceResponse<unknown>,
 
 export const validateRequest =
   (schema: ZodSchema) =>
-  (req: Request, res: Response, next: NextFunction): void => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    // Make it async and return Promise<void>
     try {
-      schema.parse({ body: req.body, query: req.query, params: req.params });
+      await schema.parseAsync({
+        // Use parseAsync
+        body: req.body,
+        query: req.query,
+        params: req.params
+      });
       next();
     } catch (err) {
-      const errorMessage = `Invalid input: ${(err as ZodError).errors.map(e => e.message).join(', ')}`;
-      const statusCode = StatusCodes.BAD_REQUEST;
-      const serviceResponse = ServiceResponse.failure(errorMessage, null, statusCode);
-      return handleServiceResponse(serviceResponse, res);
+      if (err instanceof ZodError) {
+        logger.warn({ error: err }, 'Validation error occurred');
+        const errorMessages = err.errors.map((issue: any) => ({
+          // Extract detailed messages
+          field: issue.path.join('.'),
+          message: issue.message
+        }));
+        const serviceResponse = ServiceResponse.failure('Validation failed', errorMessages, StatusCodes.BAD_REQUEST);
+        handleServiceResponse(serviceResponse, res);
+        return;
+      }
+      logger.error({ error: err }, 'Unexpected error in validateRequest middleware');
+      const serviceResponse = ServiceResponse.failure('Internal Server Error', null, StatusCodes.INTERNAL_SERVER_ERROR);
+      handleServiceResponse(serviceResponse, res);
+      return;
     }
   };

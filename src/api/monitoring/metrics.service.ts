@@ -3,7 +3,6 @@ import client from 'prom-client';
 class MetricsService {
   private register = new client.Registry();
 
-  // Metrics
   public httpRequestDuration = new client.Histogram({
     name: 'http_request_duration_seconds',
     help: 'Duration of HTTP requests in seconds',

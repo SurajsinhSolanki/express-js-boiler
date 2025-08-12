@@ -1,8 +1,22 @@
-import type { User } from '@/api/user/userModel';
+import { CreateUserBody, UpdateUserBody, User } from '@/api/user/userModel';
 import { UserRepository } from '@/api/user/userRepository';
 import { ServiceResponse } from '@/common/models/serviceResponse';
 import { createChildLogger } from '@/common/utils/logger';
+import { hashPassword, comparePasswords } from '@/common/utils/security';
+import { generateAccessToken, generateRefreshToken, extractJwtPayload } from '@/common/utils/jwt';
 import { StatusCodes } from '@/common/utils/statusCodes';
+
+function excludePassword<T extends User | User[]>(
+  user: T
+): T extends User[] ? Omit<User, 'password'>[] : Omit<T, 'password'> {
+  if (Array.isArray(user)) {
+    return user.map(({ password: _password, ...rest }) => rest) as T extends User[]
+      ? Omit<User, 'password'>[]
+      : Omit<T, 'password'>;
+  }
+  const { password: _password, ...rest } = user;
+  return rest as T extends User[] ? Omit<User, 'password'>[] : Omit<T, 'password'>;
+}
 
 export class UserService {
   private userRepository: UserRepository;
@@ -12,14 +26,13 @@ export class UserService {
     this.userRepository = repository;
   }
 
-  // Retrieves all users from the database
-  async findAll(): Promise<ServiceResponse<User[] | null>> {
+  async findAll(): Promise<ServiceResponse<Omit<User, 'password'>[] | null>> {
     try {
       const users = await this.userRepository.findAllAsync();
       if (!users || users.length === 0) {
         return ServiceResponse.failure('No Users found', null, StatusCodes.NOT_FOUND);
       }
-      return ServiceResponse.success<User[]>('Users found', users);
+      return ServiceResponse.success<Omit<User, 'password'>[]>('Users found', excludePassword(users));
     } catch (ex) {
       const errorMessage = `Error finding all users: $${(ex as Error).message}`;
       this.userLogger.error(errorMessage);
@@ -31,15 +44,14 @@ export class UserService {
     }
   }
 
-  // Retrieves a single user by their ID
-  async findById(id: number): Promise<ServiceResponse<User | null>> {
+  async findById(id: number): Promise<ServiceResponse<Omit<User, 'password'> | null>> {
     try {
       this.userLogger.info(`Finding user with id ${id}`);
       const user = await this.userRepository.findByIdAsync(id);
       if (!user) {
         return ServiceResponse.failure('User not found', null, StatusCodes.NOT_FOUND);
       }
-      return ServiceResponse.success<User>('User found', user);
+      return ServiceResponse.success<Omit<User, 'password'>>('User found', excludePassword(user));
     } catch (ex) {
       const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
       this.userLogger.error(errorMessage);
@@ -47,15 +59,14 @@ export class UserService {
     }
   }
 
-  // Retrieves a single user by their email
-  async findByEmail(email: string): Promise<ServiceResponse<User | null>> {
+  async findByEmail(email: string): Promise<ServiceResponse<Omit<User, 'password'> | null>> {
     try {
       this.userLogger.info(`Finding user with email ${email}`);
       const user = await this.userRepository.findByEmailAsync(email);
       if (!user) {
         return ServiceResponse.failure('User not found', null, StatusCodes.NOT_FOUND);
       }
-      return ServiceResponse.success<User>('User found', user);
+      return ServiceResponse.success<Omit<User, 'password'>>('User found', excludePassword(user));
     } catch (ex) {
       const errorMessage = `Error finding user with email ${email}:, ${(ex as Error).message}`;
       this.userLogger.error(errorMessage);
@@ -63,15 +74,14 @@ export class UserService {
     }
   }
 
-  // Retrieves a single user by their phone number
-  async findByPhoneNumber(phoneNumber: string): Promise<ServiceResponse<User | null>> {
+  async findByPhoneNumber(phoneNumber: string): Promise<ServiceResponse<Omit<User, 'password'> | null>> {
     try {
       this.userLogger.info(`Finding user with phone number ${phoneNumber}`);
       const user = await this.userRepository.findByPhoneNumberAsync(phoneNumber);
       if (!user) {
         return ServiceResponse.failure('User not found', null, StatusCodes.NOT_FOUND);
       }
-      return ServiceResponse.success<User>('User found', user);
+      return ServiceResponse.success<Omit<User, 'password'>>('User found', excludePassword(user));
     } catch (ex) {
       const errorMessage = `Error finding user with phone number ${phoneNumber}:, ${(ex as Error).message}`;
       this.userLogger.error(errorMessage);
@@ -79,25 +89,59 @@ export class UserService {
     }
   }
 
-  // Creates a new user
-  async create(user: User): Promise<ServiceResponse<User | null>> {
+  async create(userData: CreateUserBody): Promise<ServiceResponse<Omit<User, 'password'> | null>> {
     try {
-      this.userLogger.info(`Creating user with email ${user.email}`);
-      const createdUser = await this.userRepository.createAsync(user);
-      return ServiceResponse.success<User>('User created', createdUser);
+      if (userData.email) {
+        const existingUser = await this.userRepository.findByEmailAsync(userData.email);
+        if (existingUser) {
+          return ServiceResponse.failure('User with this email already exists', null, StatusCodes.CONFLICT);
+        }
+      }
+      if (userData.phoneNumber) {
+        const existingUser = await this.userRepository.findByPhoneNumberAsync(userData.phoneNumber);
+        if (existingUser) {
+          return ServiceResponse.failure('User with this phone number already exists', null, StatusCodes.CONFLICT);
+        }
+      }
+
+      const hashedPassword = await hashPassword(userData.password);
+
+      this.userLogger.info(`Creating user with email ${userData.email || userData.phoneNumber}`);
+      const createdUser = await this.userRepository.createAsync({
+        ...userData,
+        password: hashedPassword
+      } as User); // Cast to User as Prisma expects the full model
+
+      return ServiceResponse.success<Omit<User, 'password'>>('User created', excludePassword(createdUser));
     } catch (ex) {
-      const errorMessage = `Error creating user with email ${user.email}:, ${(ex as Error).message}`;
+      const errorMessage = `Error creating user: ${(ex as Error).message}`;
       this.userLogger.error(errorMessage);
       return ServiceResponse.failure('An error occurred while creating user.', null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
 
-  // Updates an existing user
-  async update(id: number, user: User): Promise<ServiceResponse<User | null>> {
+  async update(id: number, userData: UpdateUserBody): Promise<ServiceResponse<Omit<User, 'password'> | null>> {
     try {
       this.userLogger.info(`Updating user with id ${id}`);
-      const updatedUser = await this.userRepository.updateAsync(id, user);
-      return ServiceResponse.success<User>('User updated', updatedUser);
+
+      const allowedUpdates: Partial<Omit<User, 'password' | 'email' | 'phoneNumber'>> = {};
+
+      if (userData.isVerified !== undefined) allowedUpdates.isVerified = userData.isVerified;
+      if (userData.isAdmin !== undefined) allowedUpdates.isAdmin = userData.isAdmin;
+
+      if (Object.keys(allowedUpdates).length === 0) {
+        return ServiceResponse.failure(
+          'No valid fields provided for update. Only isVerified and isAdmin can be updated directly.',
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+      }
+
+      const updatedUser = await this.userRepository.updateAsync(id, allowedUpdates as User);
+      if (!updatedUser) {
+        return ServiceResponse.failure('User not found for update', null, StatusCodes.NOT_FOUND);
+      }
+      return ServiceResponse.success<Omit<User, 'password'>>('User updated', excludePassword(updatedUser));
     } catch (ex) {
       const errorMessage = `Error updating user with id ${id}:, ${(ex as Error).message}`;
       this.userLogger.error(errorMessage);
@@ -105,16 +149,147 @@ export class UserService {
     }
   }
 
-  // Deletes a user by their ID
-  async delete(id: number): Promise<ServiceResponse<User | null>> {
+  async delete(id: number): Promise<ServiceResponse<Omit<User, 'password'> | null>> {
     try {
       this.userLogger.info(`Deleting user with id ${id}`);
       const deletedUser = await this.userRepository.deleteAsync(id);
-      return ServiceResponse.success<User>('User deleted', deletedUser);
+      return ServiceResponse.success<Omit<User, 'password'>>('User deleted', excludePassword(deletedUser));
     } catch (ex) {
       const errorMessage = `Error deleting user with id ${id}:, ${(ex as Error).message}`;
       this.userLogger.error(errorMessage);
       return ServiceResponse.failure('An error occurred while deleting user.', null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async requestEmailChange(id: number, newEmail: string): Promise<ServiceResponse<Omit<User, 'password'> | null>> {
+    try {
+      this.userLogger.info(`Requesting email change for user id ${id} to ${newEmail}`);
+
+      const user = await this.userRepository.findByIdAsync(id);
+      if (!user) {
+        return ServiceResponse.failure('User not found', null, StatusCodes.NOT_FOUND);
+      }
+
+      const existingUserWithNewEmail = await this.userRepository.findByEmailAsync(newEmail);
+      if (existingUserWithNewEmail && existingUserWithNewEmail.id !== id) {
+        return ServiceResponse.failure('This email is already registered to another user.', null, StatusCodes.CONFLICT);
+      }
+
+      const verificationServiceResponse = await this.userRepository.createVerificationTokenAsync(
+        user.id,
+        'CHANGE_EMAIL'
+      );
+
+      if (!verificationServiceResponse) {
+        return ServiceResponse.failure(
+          'Failed to generate email change verification token.',
+          null,
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      }
+
+      this.userLogger.info(
+        `Email change verification token generated for user ${id}. Token: ${verificationServiceResponse.token}`
+      );
+
+      return ServiceResponse.success<Omit<User, 'password'>>(
+        'Email change verification initiated. Please check your new email for a verification link.',
+        excludePassword(user)
+      );
+    } catch (ex) {
+      const errorMessage = `Error requesting email change for user id ${id}: ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure(
+        'An error occurred while requesting email change.',
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async verifyEmailChange(token: string): Promise<ServiceResponse<Omit<User, 'password'> | null>> {
+    try {
+      this.userLogger.info(`Verifying email change with token: ${token}`);
+
+      const verificationToken = await this.userRepository.findVerificationTokenAsync(token, 'CHANGE_EMAIL');
+      if (
+        !verificationToken ||
+        verificationToken.isUsed ||
+        (verificationToken.expiresAt && verificationToken.expiresAt < new Date())
+      ) {
+        return ServiceResponse.failure('Invalid or expired email change token.', null, StatusCodes.BAD_REQUEST);
+      }
+
+      const user = await this.userRepository.findByIdAsync(verificationToken.userId);
+      if (!user) {
+        return ServiceResponse.failure('User not found for verification.', null, StatusCodes.NOT_FOUND);
+      }
+
+      const newEmail = verificationToken.token;
+
+      const updatedUser = await this.userRepository.updateAsync(user.id, {
+        email: newEmail,
+        emailVerified: true
+      } as User);
+
+      if (!updatedUser) {
+        return ServiceResponse.failure('Failed to verify email change.', null, StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      await this.userRepository.markVerificationTokenAsUsedAsync(verificationToken.id);
+
+      return ServiceResponse.success<Omit<User, 'password'>>(
+        'Email changed and verified successfully.',
+        excludePassword(updatedUser)
+      );
+    } catch (ex) {
+      const errorMessage = `Error verifying email change with token: ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure(
+        'An error occurred while verifying email change.',
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async login(credentials: {
+    email?: string;
+    phoneNumber?: string;
+    password: string;
+  }): Promise<ServiceResponse<{ user: Omit<User, 'password'>; accessToken: string; refreshToken: string } | null>> {
+    try {
+      let user: User | null = null;
+
+      if (credentials.email) {
+        user = await this.userRepository.findByEmailAsync(credentials.email);
+      } else if (credentials.phoneNumber) {
+        user = await this.userRepository.findByPhoneNumberAsync(credentials.phoneNumber);
+      }
+
+      if (!user) {
+        return ServiceResponse.failure('Invalid credentials', null, StatusCodes.UNAUTHORIZED);
+      }
+
+      const isPasswordValid = await comparePasswords(credentials.password, user.password);
+
+      if (!isPasswordValid) {
+        return ServiceResponse.failure('Invalid credentials', null, StatusCodes.UNAUTHORIZED);
+      }
+
+      const jwtPayload = extractJwtPayload(user);
+      const accessToken = generateAccessToken(jwtPayload);
+      const refreshToken = generateRefreshToken(jwtPayload);
+
+      const userWithoutPassword = excludePassword(user);
+      return ServiceResponse.success<{ user: Omit<User, 'password'>; accessToken: string; refreshToken: string }>(
+        'Login successful',
+        { user: userWithoutPassword, accessToken, refreshToken }
+      );
+    } catch (ex) {
+      const errorMessage = `Error during login: ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure('An error occurred during login.', null, StatusCodes.INTERNAL_SERVER_ERROR);
     }
   }
 }

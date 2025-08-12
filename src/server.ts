@@ -18,10 +18,8 @@ const app: Express = express();
 app.use(metricsMiddleware);
 app.use('/api', metricsRouter);
 
-// Set the application to trust the reverse proxy
 app.set('trust proxy', true);
 
-// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(compressionMiddleware);
@@ -29,17 +27,13 @@ app.use(corsMiddleware);
 app.use(helmetMiddleware);
 app.use(rateLimiter);
 
-// Request logging
 app.use(...requestLoggerMiddleware());
 
-// Routes
 app.use('/api/health-check', healthCheckRouter);
 app.use('/api/v1/users', userRouter);
 
-// Swagger UI
 app.use(openAPIRouter);
 
-// Error handlers
 app.use(errorHandler());
 
 export { app, logger };
