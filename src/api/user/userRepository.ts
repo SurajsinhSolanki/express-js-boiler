@@ -1,4 +1,4 @@
-import prisma from '@/common/config/database';
+import { prisma } from '@/common/config/database';
 import type { User } from '@/api/user/userModel';
 import { VerificationType } from '@prisma/client';
 import { randomBytes } from 'crypto';
@@ -53,7 +53,7 @@ export class UserRepository {
     type: VerificationType
   ): Promise<{ id: number; token: string; expiresAt: Date } | null> {
     const token = randomBytes(32).toString('hex');
-    const expiresAt = DateTime.now().plus({ minutes: 60 }).toJSDate();
+    const expiresAt = DateTime.now().plus({ minutes: 60 }).toJSDate(); // Default 60 minutes for verification tokens
 
     const verification = await prisma.userVerification.create({
       data: {
@@ -71,6 +71,29 @@ export class UserRepository {
     return verification;
   }
 
+  async createRefreshTokenAsync(
+    userId: number,
+    token: string,
+    expiresAt: Date
+  ): Promise<{ id: number; token: string; expiresAt: Date; isUsed: boolean } | null> {
+    const refreshToken = await prisma.userVerification.create({
+      data: {
+        userId,
+        verificationType: VerificationType.REFRESH_TOKEN,
+        token,
+        expiresAt,
+        isUsed: false // Initially not used/revoked
+      },
+      select: {
+        id: true,
+        token: true,
+        expiresAt: true,
+        isUsed: true
+      }
+    });
+    return refreshToken;
+  }
+
   async findVerificationTokenAsync(
     token: string,
     type: VerificationType
@@ -80,6 +103,18 @@ export class UserRepository {
         token,
         verificationType: type,
         isUsed: false
+      }
+    });
+  }
+
+  async findRefreshTokenAsync(
+    token: string
+  ): Promise<{ id: number; userId: number; token: string; expiresAt: Date; isUsed: boolean } | null> {
+    return prisma.userVerification.findFirst({
+      where: {
+        token,
+        verificationType: VerificationType.REFRESH_TOKEN,
+        isUsed: false // isUsed here means not revoked
       }
     });
   }

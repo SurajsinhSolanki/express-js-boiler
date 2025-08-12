@@ -112,3 +112,34 @@ userRegistry.registerPath({
 });
 
 userRouter.post('/login', validateRequest(LoginUserSchema), userController.login);
+
+userRegistry.registerPath({
+  method: 'post',
+  path: VERSION_1 + API_ROUTES.USERS + '/refresh-token',
+  tags: ['User'],
+  security: [],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            refreshToken: z.string()
+          })
+        }
+      }
+    }
+  },
+  responses: createApiResponse(
+    z.object({
+      accessToken: z.string(),
+      refreshToken: z.string()
+    }),
+    'Tokens refreshed successfully'
+  )
+});
+
+userRouter.post(
+  '/refresh-token',
+  validateRequest(z.object({ refreshToken: z.string() })),
+  userController.refreshTokens
+);

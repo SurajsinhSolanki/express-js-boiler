@@ -3,8 +3,11 @@ import { UserRepository } from '@/api/user/userRepository';
 import { ServiceResponse } from '@/common/models/serviceResponse';
 import { createChildLogger } from '@/common/utils/logger';
 import { hashPassword, comparePasswords } from '@/common/utils/security';
-import { generateAccessToken, generateRefreshToken, extractJwtPayload } from '@/common/utils/jwt';
+import { generateAccessToken, generateRefreshToken, extractJwtPayload, verifyRefreshToken } from '@/common/utils/jwt';
 import { StatusCodes } from '@/common/utils/statusCodes';
+import ms from 'ms';
+import { ENV } from '@/common/utils/config';
+import { StringValue } from 'ms';
 
 function excludePassword<T extends User | User[]>(
   user: T
@@ -279,17 +282,94 @@ export class UserService {
 
       const jwtPayload = extractJwtPayload(user);
       const accessToken = generateAccessToken(jwtPayload);
-      const refreshToken = generateRefreshToken(jwtPayload);
+      const refreshTokenString = generateRefreshToken(jwtPayload);
+
+      // Store the refresh token in the database
+      const refreshTokenExpiresAt = new Date(Date.now() + ms(ENV.REFRESH_TOKEN_EXPIRY as StringValue));
+      const storedRefreshToken = await this.userRepository.createRefreshTokenAsync(
+        user.id,
+        refreshTokenString,
+        refreshTokenExpiresAt
+      );
+
+      if (!storedRefreshToken) {
+        return ServiceResponse.failure('Failed to store refresh token', null, StatusCodes.INTERNAL_SERVER_ERROR);
+      }
 
       const userWithoutPassword = excludePassword(user);
       return ServiceResponse.success<{ user: Omit<User, 'password'>; accessToken: string; refreshToken: string }>(
         'Login successful',
-        { user: userWithoutPassword, accessToken, refreshToken }
+        { user: userWithoutPassword, accessToken, refreshToken: refreshTokenString }
       );
     } catch (ex) {
       const errorMessage = `Error during login: ${(ex as Error).message}`;
       this.userLogger.error(errorMessage);
       return ServiceResponse.failure('An error occurred during login.', null, StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async refreshAccessToken(
+    oldRefreshToken: string
+  ): Promise<ServiceResponse<{ accessToken: string; refreshToken: string } | null>> {
+    try {
+      this.userLogger.info('Attempting to refresh access token');
+
+      // 1. Verify the old refresh token
+      const decodedRefreshToken = verifyRefreshToken(oldRefreshToken);
+      if (!decodedRefreshToken) {
+        return ServiceResponse.failure('Invalid refresh token', null, StatusCodes.UNAUTHORIZED);
+      }
+
+      // 2. Check if the refresh token exists in the database and is not revoked
+      const storedRefreshToken = await this.userRepository.findRefreshTokenAsync(oldRefreshToken);
+
+      if (!storedRefreshToken || storedRefreshToken.isUsed || storedRefreshToken.expiresAt < new Date()) {
+        // If token is found but revoked/expired, or not found, consider it invalid
+        if (storedRefreshToken && storedRefreshToken.isUsed) {
+          this.userLogger.warn(`Attempt to use a revoked refresh token for user ID: ${decodedRefreshToken.userId}`);
+        }
+        return ServiceResponse.failure('Invalid or expired refresh token', null, StatusCodes.UNAUTHORIZED);
+      }
+
+      // 3. Revoke the old refresh token
+      await this.userRepository.markVerificationTokenAsUsedAsync(storedRefreshToken.id);
+
+      // 4. Get user details to generate new tokens
+      const user = await this.userRepository.findByIdAsync(decodedRefreshToken.userId);
+      if (!user) {
+        return ServiceResponse.failure('User not found for token refresh', null, StatusCodes.NOT_FOUND);
+      }
+
+      // 5. Generate new access and refresh tokens
+      const newJwtPayload = extractJwtPayload(user);
+      const newAccessToken = generateAccessToken(newJwtPayload);
+      const newRefreshTokenString = generateRefreshToken(newJwtPayload);
+
+      // 6. Store the new refresh token in the database
+      const newRefreshTokenExpiresAt = new Date(Date.now() + ms(ENV.REFRESH_TOKEN_EXPIRY as StringValue));
+      const newStoredRefreshToken = await this.userRepository.createRefreshTokenAsync(
+        user.id,
+        newRefreshTokenString,
+        newRefreshTokenExpiresAt
+      );
+
+      if (!newStoredRefreshToken) {
+        return ServiceResponse.failure('Failed to store new refresh token', null, StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      this.userLogger.info(`Access token refreshed for user ID: ${user.id}`);
+      return ServiceResponse.success<{ accessToken: string; refreshToken: string }>('Tokens refreshed successfully', {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshTokenString
+      });
+    } catch (ex) {
+      const errorMessage = `Error during token refresh: ${(ex as Error).message}`;
+      this.userLogger.error(errorMessage);
+      return ServiceResponse.failure(
+        'An error occurred during token refresh.',
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
+      );
     }
   }
 }

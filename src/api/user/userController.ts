@@ -64,6 +64,12 @@ class UserController {
     const serviceResponse = await userService.verifyEmailChange(token);
     handleServiceResponse(serviceResponse, res);
   };
+
+  public refreshTokens = async (req: Request, res: Response): Promise<void> => {
+    const { refreshToken } = req.body;
+    const serviceResponse = await userService.refreshAccessToken(refreshToken);
+    handleServiceResponse(serviceResponse, res);
+  };
 }
 
 export const userController = new UserController();

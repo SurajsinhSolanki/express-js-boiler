@@ -15,7 +15,8 @@ const envSchema = z
       .default('1.0.0'),
     APP_NAME: z.string().default('Express Boilerplate'),
 
-    P_SQL_DATABASE_URL: z.string().url('Invalid database URL'),
+    P_SQL_DATABASE_URL: z.string().url('Invalid PostgreSQL database URL'),
+    MONGO_DATABASE_URL: z.string().url('Invalid MongoDB database URL').optional(),
 
     JWT_SECRET: z.string().min(32, 'JWT secret must be at least 32 characters'),
     REFRESH_TOKEN_SECRET: z.string().min(32, 'Refresh token secret must be at least 32 characters'),

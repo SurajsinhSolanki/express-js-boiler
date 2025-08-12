@@ -33,11 +33,24 @@ export const generateRefreshToken = (payload: JwtPayload): string => {
 };
 
 /**
- * Verifies a JWT token.
+ * Verifies a refresh token.
  * @param token The token to verify.
  * @returns The decoded payload if verification is successful, null otherwise.
  */
-export const verifyToken = (token: string): JwtPayload | null => {
+export const verifyRefreshToken = (token: string): JwtPayload | null => {
+  try {
+    return jwt.verify(token, pblKey) as JwtPayload;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Verifies an access token.
+ * @param token The token to verify.
+ * @returns The decoded payload if verification is successful, null otherwise.
+ */
+export const verifyAccessToken = (token: string): JwtPayload | null => {
   try {
     return jwt.verify(token, pblKey) as JwtPayload;
   } catch {

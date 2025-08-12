@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import { ServiceResponse } from '@/common/models/serviceResponse';
 import { StatusCodes } from '@/common/utils/statusCodes';
-import { verifyToken } from '@/common/utils/jwt';
+import { verifyAccessToken } from '@/common/utils/jwt';
 
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
@@ -17,7 +17,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
   }
 
   const token = authHeader.split(' ')[1];
-  const decoded = verifyToken(token);
+  const decoded = verifyAccessToken(token);
 
   if (!decoded) {
     const serviceResponse = ServiceResponse.failure('Invalid or expired token', null, StatusCodes.FORBIDDEN);

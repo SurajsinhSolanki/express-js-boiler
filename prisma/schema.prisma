@@ -58,6 +58,7 @@ enum VerificationType {
   CHANGE_EMAIL
   CHANGE_PHONE
   MFA_SETUP
+  REFRESH_TOKEN // Added for refresh token management
 }
 
 model UserPasswordHistory {

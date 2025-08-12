@@ -1,13 +1,20 @@
 ### prisma migration command
 
-- npx prisma migrate dev --name init
+- npm migrate:dev --name <NAME>
+- npm migrate
+- npm generate
+- npm seed
+- npm reset
 
-agenda
-argon2
-Luxon / Day.js
+### NPM TO ADD
 
-for code coverage
-npx vitest run --coverage
+- agenda
+- argon2
+
+### code coverage & test
+
+- npm coverage
+- npm test
 
 ### TODOS
 

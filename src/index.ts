@@ -1,6 +1,7 @@
 import { ENV } from '@/common/utils/config';
 import { app, logger } from '@/server';
 import { createCluster } from './common/utils/cluster';
+import { connectMongoose, disconnectMongoose } from './common/config/database';
 import net from 'net';
 
 const isPortFree = (port: number) => {
@@ -17,6 +18,7 @@ const isPortFree = (port: number) => {
 };
 
 const startServer = async () => {
+  await connectMongoose(); // Connect to MongoDB
   let PORT = ENV.PORT;
 
   while (true) {
@@ -60,6 +62,8 @@ const startServer = async () => {
         resolve(null);
       });
     });
+
+    await disconnectMongoose(); // Disconnect from MongoDB
 
     process.exit(0);
   };
