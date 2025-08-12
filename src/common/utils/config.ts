@@ -46,6 +46,7 @@ const envSchema = z
 
     LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
     LOG_FILE: z.coerce.boolean().default(false),
+    MONGO_LOG_ENABLED: z.coerce.boolean().default(false),
 
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().min(1).max(65535).optional(),

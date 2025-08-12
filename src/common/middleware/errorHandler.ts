@@ -2,6 +2,8 @@ import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { StatusCodes } from '@/common/utils/statusCodes';
 import { ServiceResponse } from '@/common/models/serviceResponse';
 import { createChildLogger } from '@/common/utils/logger';
+import ErrorLog from '@/common/models/errorLogModel'; // Import the new ErrorLog model
+import { ENV } from '@/common/utils/config'; // Import ENV to check environment
 
 const logger = createChildLogger('error-handler');
 
@@ -9,8 +11,35 @@ const unexpectedRequest: RequestHandler = (_req, res) => {
   res.status(StatusCodes.NOT_FOUND).json(ServiceResponse.failure('Resource not found', null, StatusCodes.NOT_FOUND));
 };
 
-const errorHandler: ErrorRequestHandler = (err, _req, res, _next): void => {
+const errorHandler: ErrorRequestHandler = (err, req, res, _next): void => {
   logger.error({ err }, 'Error occurred');
+
+  if (ENV.NODE_ENV === 'production' && ENV.MONGO_LOG_ENABLED) {
+    const statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
+    const errorLog = new ErrorLog({
+      message: err.message,
+      stack: err.stack,
+      level: 'error',
+      timestamp: new Date(),
+      environment: ENV.NODE_ENV,
+      statusCode: statusCode,
+      requestUrl: req.originalUrl,
+      requestMethod: req.method,
+      ipAddress: req.ip,
+      // userId: req.user?._id, // Uncomment if you have user authentication and want to log user ID
+      additionalInfo: {
+        // Add any other relevant request/error details here
+        headers: req.headers,
+        body: req.body,
+        params: req.params,
+        query: req.query
+      }
+    });
+
+    errorLog.save().catch(mongoErr => {
+      logger.error({ mongoErr }, 'Failed to save error log to MongoDB');
+    });
+  }
 
   if (err.name === 'ValidationError') {
     res.status(StatusCodes.BAD_REQUEST).json(ServiceResponse.failure(err.message, err.errors, StatusCodes.BAD_REQUEST));
