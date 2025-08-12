@@ -8,6 +8,7 @@ import { StatusCodes } from '@/common/utils/statusCodes';
 import ms from 'ms';
 import { ENV } from '@/common/utils/config';
 import { StringValue } from 'ms';
+import { sendEmail } from '@/common/utils/emailService';
 
 function excludePassword<T extends User | User[]>(
   user: T
@@ -194,6 +195,23 @@ export class UserService {
       this.userLogger.info(
         `Email change verification token generated for user ${id}. Token: ${verificationServiceResponse.token}`
       );
+
+      // Send email verification link
+      const verificationLink = `${ENV.FRONTEND_URL}/verify-email-change?token=${verificationServiceResponse.token}`;
+      const expiresInMinutes = ms(ENV.JWT_EXPIRY as StringValue) / (1000 * 60); // Assuming JWT_EXPIRY is used for token expiry
+      const currentYear = new Date().getFullYear();
+
+      await sendEmail({
+        to: newEmail, // Send to the new email address
+        subject: 'Verify Your Email Change',
+        template: 'email-verification', // EJS template name
+        context: {
+          name: user.email || user.phoneNumber || 'User', // Use existing email/phone or generic name
+          verificationLink,
+          expiresInMinutes,
+          year: currentYear
+        }
+      });
 
       return ServiceResponse.success<Omit<User, 'password'>>(
         'Email change verification initiated. Please check your new email for a verification link.',

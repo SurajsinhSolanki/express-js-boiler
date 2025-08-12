@@ -50,11 +50,13 @@ const envSchema = z
 
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().min(1).max(65535).optional(),
+    SMTP_SECURE: z.coerce.boolean().optional(),
     SMTP_USER: z.string().optional(),
     SMTP_PASSWORD: z.string().optional(),
     SMTP_FROM: z.string().email('Invalid SMTP from email').optional(),
 
-    PROMETHEUS_URL: z.string().url().default('http://localhost:9090')
+    PROMETHEUS_URL: z.string().url().default('http://localhost:9090'),
+    WEBSOCKETS_ENABLED: z.coerce.boolean().default(false)
   })
   .refine(
     data => {

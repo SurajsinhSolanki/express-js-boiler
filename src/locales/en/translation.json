@@ -1,0 +1,8 @@
+{
+  "welcome": "Welcome to our API!",
+  "greeting": "Hello, {{name}}!",
+  "error_unauthorized": "Unauthorized: Authentication required.",
+  "error_forbidden": "Forbidden: Insufficient permissions.",
+  "user_not_found": "User not found.",
+  "email_verification_subject": "Verify Your Email Address"
+}

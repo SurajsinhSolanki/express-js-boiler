@@ -6,7 +6,8 @@ import { createApiResponse } from '@/api-docs/openAPIResponseBuilders';
 import { CreateUserSchema, GetUserSchema, LoginUserSchema, UpdateUserSchema, UserSchema } from '@/api/user/userModel';
 import { API_ROUTES, VERSION_1 } from '@/common/utils/apiRoutes';
 import { validateRequest } from '@/common/utils/httpHandlers';
-import { authenticate, authorize } from '@/common/middleware/authMiddleware'; // Import auth middleware
+import { authenticate } from '@/common/middleware/authMiddleware'; // Import auth middleware
+import { authorizeRoles, UserRole } from '@/common/middleware/roleMiddleware'; // Import new role middleware
 import { userController } from './userController';
 
 export const userRegistry = new OpenAPIRegistry();
@@ -22,7 +23,18 @@ userRegistry.registerPath({
   responses: createApiResponse(z.array(UserSchema), 'Success')
 });
 
-userRouter.get('/', authenticate, authorize(['admin']), userController.getUsers);
+userRouter.get('/', authenticate, authorizeRoles([UserRole.ADMIN]), userController.getUsers);
+
+// Example route: Get all users (admin only)
+userRegistry.registerPath({
+  method: 'get',
+  path: VERSION_1 + API_ROUTES.USERS + '/admin/all',
+  tags: ['User', 'Admin'],
+  summary: 'Get all users (Admin only)',
+  security: [{ BearerAuth: [] }],
+  responses: createApiResponse(z.array(UserSchema), 'Success')
+});
+userRouter.get('/admin/all', authenticate, authorizeRoles([UserRole.ADMIN]), userController.getUsers);
 
 userRegistry.registerPath({
   method: 'get',
@@ -80,7 +92,7 @@ userRegistry.registerPath({
 userRouter.put(
   '/:id',
   authenticate,
-  authorize(['admin', 'user']),
+  authorizeRoles([UserRole.ADMIN, UserRole.USER]),
   validateRequest(UpdateUserSchema),
   userController.updateUser
 );
@@ -97,7 +109,7 @@ userRegistry.registerPath({
 userRouter.delete(
   '/:id',
   authenticate,
-  authorize(['admin']),
+  authorizeRoles([UserRole.ADMIN]),
   validateRequest(GetUserSchema),
   userController.deleteUser
 );

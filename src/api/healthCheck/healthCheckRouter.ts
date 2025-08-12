@@ -18,10 +18,12 @@ healthCheckRegistry.registerPath({
   responses: createApiResponse(z.null(), 'Success')
 });
 
-healthCheckRouter.get('/', (_req: Request, res: Response) => {
-  const serviceResponse = ServiceResponse.success('Service is healthy', {
+healthCheckRouter.get('/', (req: Request, res: Response) => {
+  const serviceResponse = ServiceResponse.success(req.t('welcome'), {
+    // Use i18n translation
     uptime: process.uptime(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    language: req.language // Add current language to response
   });
 
   return handleServiceResponse(serviceResponse, res);

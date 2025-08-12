@@ -1,7 +1,8 @@
 import { ENV } from '@/common/utils/config';
-import { app, logger } from '@/server';
+import { logger, httpServer } from '@/server'; // Import httpServer
 import { createCluster } from './common/utils/cluster';
 import { connectMongoose, disconnectMongoose } from './common/config/database';
+import { initializeSocketIO } from './common/utils/socketService'; // Import socket service
 import net from 'net';
 
 const isPortFree = (port: number) => {
@@ -40,20 +41,27 @@ const startServer = async () => {
     }
   }
 
-  const server = app.listen(PORT, () => {
+  const server = httpServer.listen(PORT, () => {
+    // Use httpServer.listen
     const { NODE_ENV, HOST } = ENV;
     logger.info(
       `Server (${NODE_ENV}) running on http://${HOST}:${PORT} ${
         ENV.CLUSTER_ENABLED ? `(Worker ID: ${process.pid})` : ''
       }`
     );
+
+    if (ENV.WEBSOCKETS_ENABLED) {
+      initializeSocketIO(httpServer); // Initialize Socket.IO
+      logger.info('WebSockets enabled.');
+    }
   });
 
   const onCloseSignal = async () => {
     logger.info('Shutting down server...');
 
     await new Promise(resolve => {
-      server.close(err => {
+      server.close((err?: Error) => {
+        // Explicitly type err
         if (err) {
           logger.error('Error during shutdown:', err);
           process.exit(1);
