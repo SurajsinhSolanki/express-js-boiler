@@ -8,7 +8,7 @@ export const createDate = (dateInput?: string | Date | DateTime | number): DateT
   return DateTime.now();
 };
 
-export const formatDate = (date: DateTime | Date | string, format: string = 'yyyy-MM-dd'): string => {
+export const formatDate = (date: DateTime | Date | string, format: string = 'YYYY-MM-DD'): string => {
   const dt = createDate(date);
   return dt.toFormat(format);
 };

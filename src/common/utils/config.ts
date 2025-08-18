@@ -56,7 +56,10 @@ const envSchema = z
     SMTP_FROM: z.string().email('Invalid SMTP from email').optional(),
 
     PROMETHEUS_URL: z.string().url().default('http://localhost:9090'),
-    WEBSOCKETS_ENABLED: z.coerce.boolean().default(false)
+    WEBSOCKETS_ENABLED: z.coerce.boolean().default(false),
+
+    SWAGGER_USER: z.string().optional().default('admin'),
+    SWAGGER_PASS: z.string().optional().default('password')
   })
   .refine(
     data => {
@@ -117,6 +120,15 @@ export const loggerConfig = {
     name: ENV.SERVICE_NAME,
     version: ENV.SERVICE_VERSION
   }
+};
+
+export const AppSettings = {
+  MAX_LOGIN_ATTEMPTS: 3,
+  CAN_LOGIN_AFTER_LOCKOUT_MINUTES: 1440,
+  CAN_REQUEST_TOKEN_AFTER_MINUTES: 10,
+  DATETIME_FORMAT: 'YYYY-MM-DDTHH:mm:ssZ',
+  DATE_FORMAT: 'YYYY-MM-DD',
+  TIME_FORMAT: 'HH:mm:ss'
 };
 
 export type Environment = typeof ENV;
