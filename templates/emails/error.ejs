@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .header { background-color: #f8d7da; color: #721c24; padding: 10px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 20px; }
+        .error-message { color: #dc3545; font-weight: bold; margin-bottom: 15px; }
+        .stack-trace {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+        .footer { margin-top: 20px; text-align: center; font-size: 0.8em; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Project Error Report</h1>
+        </div>
+        <div class="content">
+            <p>An error occurred in the application:</p>
+            <p class="error-message">Error: <%= error.message %></p>
+            <% if (error.stack) { %>
+                <p>Stack Trace:</p>
+                <div class="stack-trace"><%= error.stack %></div>
+            <% } %>
+            <p>Timestamp: <%= timestamp %></p>
+            <p>Service: <%= serviceName %>@<%= serviceVersion %></p>
+        </div>
+        <div class="footer">
+            <p>This is an automated error report.</p>
+        </div>
+    </div>
+</body>
+</html>

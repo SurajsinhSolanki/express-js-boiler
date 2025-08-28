@@ -2,8 +2,9 @@ import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { StatusCodes } from '@/common/utils/statusCodes';
 import { ServiceResponse } from '@/common/models/serviceResponse';
 import { createChildLogger } from '@/common/utils/logger';
-import ErrorLog from '@/common/models/errorLogModel'; // Import the new ErrorLog model
-import { ENV } from '@/common/utils/config'; // Import ENV to check environment
+import ErrorLog from '@/common/models/errorLogModel';
+import { ENV } from '@/common/utils/config';
+import { sendErrorEmail } from '@/common/utils/emailService';
 
 const logger = createChildLogger('error-handler');
 
@@ -39,6 +40,13 @@ const errorHandler: ErrorRequestHandler = (err, req, res, _next): void => {
     errorLog.save().catch(mongoErr => {
       logger.error({ mongoErr }, 'Failed to save error log to MongoDB');
     });
+
+    // Send error email notification if DEV_EMAIL is configured
+    if (ENV.DEV_EMAIL) {
+      sendErrorEmail(err).catch(emailSendError => {
+        logger.error({ emailSendError }, 'Failed to send error email notification.');
+      });
+    }
   }
 
   if (err.name === 'ValidationError') {

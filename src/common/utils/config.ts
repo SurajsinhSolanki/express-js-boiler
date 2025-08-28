@@ -59,7 +59,9 @@ const envSchema = z
     WEBSOCKETS_ENABLED: z.coerce.boolean().default(false),
 
     SWAGGER_USER: z.string().optional().default('admin'),
-    SWAGGER_PASS: z.string().optional().default('password')
+    SWAGGER_PASS: z.string().optional().default('password'),
+
+    DEV_EMAIL: z.string().email('Invalid email address')
   })
   .refine(
     data => {
@@ -73,26 +75,6 @@ const envSchema = z
     {
       message: 'SMTP configuration (HOST, PORT, USER, PASSWORD, FROM) is required in production environment',
       path: ['SMTP_HOST']
-    }
-  )
-  .refine(
-    data => {
-      if (data.ALLOWED_ORIGINS !== '*') {
-        const origins = data.ALLOWED_ORIGINS.split(',');
-        return origins.every(origin => {
-          try {
-            new URL(origin.trim());
-            return true;
-          } catch {
-            return false;
-          }
-        });
-      }
-      return true;
-    },
-    {
-      message: "ALLOWED_ORIGINS must be '*' or comma-separated valid URLs",
-      path: ['ALLOWED_ORIGINS']
     }
   );
 
