@@ -87,16 +87,6 @@ export const createChildLogger = (module: string, context?: Record<string, any>)
   return logger.child({ module, ...context });
 };
 
-export interface Logger {
-  trace: (obj: any, msg?: string) => void;
-  debug: (obj: any, msg?: string) => void;
-  info: (obj: any, msg?: string) => void;
-  warn: (obj: any, msg?: string) => void;
-  error: (obj: any, msg?: string) => void;
-  fatal: (obj: any, msg?: string) => void;
-  child: (bindings: Record<string, any>) => Logger;
-}
-
 export const logError = (error: Error, context?: Record<string, any>) => {
   logger.error(
     {
@@ -120,39 +110,13 @@ export const logPerformance = (operation: string, duration: number, context?: Re
   );
 };
 
-export const logBusinessEvent = (event: string, data?: Record<string, any>) => {
-  logger.info(
-    {
-      businessEvent: event,
-      eventData: data,
-      timestamp: new Date().toISOString()
-    },
-    `Business event: ${event}`
-  );
-};
-
 export const logSecurityEvent = (event: string, context?: Record<string, any>) => {
   logger.warn(
     {
       securityEvent: event,
-      ...context,
-      timestamp: new Date().toISOString()
+      ...context
     },
     `Security event: ${event}`
-  );
-};
-
-export const logAudit = (action: string, userId?: string, resource?: string, context?: Record<string, any>) => {
-  logger.info(
-    {
-      audit: true,
-      action,
-      userId,
-      resource,
-      ...context,
-      timestamp: new Date().toISOString()
-    },
-    `Audit: ${action} by ${userId || 'anonymous'} on ${resource || 'unknown'}`
   );
 };
 
