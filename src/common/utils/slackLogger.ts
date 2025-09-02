@@ -1,4 +1,4 @@
-import { IncomingWebhook } from '@slack/webhook';
+import axios from 'axios';
 import { ENV } from './config';
 
 interface SlackMetadata {
@@ -12,15 +12,13 @@ interface SlackMetadata {
 const SLACK_WEBHOOK_URL = ENV.SLACK_WEBHOOK_URL;
 const MAX_RETRIES = 1;
 
-const webhook = SLACK_WEBHOOK_URL ? new IncomingWebhook(SLACK_WEBHOOK_URL) : null;
-
 /**
  * Sends an error message to Slack.
  * @param errorMessage The main error message to send.
  * @param metadata Optional metadata to include (e.g., stack trace, request ID, environment).
  */
 export async function sendErrorToSlack(errorMessage: string, metadata?: SlackMetadata): Promise<void> {
-  if (!webhook) {
+  if (!SLACK_WEBHOOK_URL) {
     console.warn('Slack webhook URL is not configured. Skipping error notification.');
     return;
   }
@@ -100,7 +98,7 @@ export async function sendErrorToSlack(errorMessage: string, metadata?: SlackMet
   let retries = 0;
   while (retries <= MAX_RETRIES) {
     try {
-      await webhook.send({ blocks });
+      await axios.post(SLACK_WEBHOOK_URL, { blocks });
       console.log('Error message sent to Slack successfully.');
       return;
     } catch (error) {
@@ -112,44 +110,3 @@ export async function sendErrorToSlack(errorMessage: string, metadata?: SlackMet
     }
   }
 }
-
-// --- Example Usage ---
-async function _exampleUsage() {
-  // Set your Slack Webhook URL in your environment variables:
-  // SLACK_WEBHOOK_URL="https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
-
-  if (!process.env.SLACK_WEBHOOK_URL) {
-    console.warn('\n--- Skipping Slack example: SLACK_WEBHOOK_URL environment variable is not set. ---');
-    console.warn('Please set SLACK_WEBHOOK_URL to run the example.\n');
-    return;
-  }
-
-  console.log('\n--- Running Slack Logger Example ---');
-
-  // Example 1: Basic error message
-  await sendErrorToSlack('This is a test error message from the application.');
-
-  // Example 2: Error message with full metadata
-  try {
-    throw new Error('Something critical went wrong!');
-  } catch (err: any) {
-    await sendErrorToSlack('Critical application failure!', {
-      stack: err.stack,
-      requestId: 'req-12345',
-      environment: process.env.NODE_ENV || 'development',
-      timestamp: new Date().toISOString(),
-      userId: 'user-abc',
-      component: 'AuthService'
-    });
-  }
-
-  // Example 3: Error message with minimal metadata
-  await sendErrorToSlack('Database connection failed.', {
-    environment: 'production'
-  });
-
-  console.log('--- Slack Logger Example Finished ---');
-}
-
-// To run the example, uncomment the line below and ensure SLACK_WEBHOOK_URL is set.
-// exampleUsage();
