@@ -5,6 +5,7 @@ import { createChildLogger } from '@/common/utils/logger';
 import ErrorLog from '@/common/models/errorLogModel';
 import { ENV } from '@/common/utils/config';
 import { sendErrorEmail } from '@/common/utils/emailService';
+import { sendErrorToSlack } from '@/common/utils/slackLogger';
 
 const logger = createChildLogger('error-handler');
 
@@ -45,6 +46,21 @@ const errorHandler: ErrorRequestHandler = (err, req, res, _next): void => {
     if (ENV.DEV_EMAIL) {
       sendErrorEmail(err).catch(emailSendError => {
         logger.error({ emailSendError }, 'Failed to send error email notification.');
+      });
+    }
+
+    // Send error to Slack if SLACK_LOG_ENABLED is configured
+    if (ENV.SLACK_LOG_ENABLED) {
+      sendErrorToSlack(err.message, {
+        stack: err.stack,
+        environment: ENV.NODE_ENV,
+        timestamp: new Date().toISOString(),
+        requestUrl: req.originalUrl,
+        requestMethod: req.method,
+        ipAddress: req.ip
+        // userId: req.user?._id, // Uncomment if you have user authentication
+      }).catch(slackErr => {
+        logger.error({ slackErr }, 'Failed to send error to Slack.');
       });
     }
   }

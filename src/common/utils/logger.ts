@@ -1,5 +1,5 @@
 import pino from 'pino';
-import { ENV, loggerConfig } from '@/common/utils/config';
+import { ENV } from '@/common/utils/config';
 import { getFilename } from './filenameUtils';
 
 const logLevels = {
@@ -45,7 +45,7 @@ const baseConfig: pino.LoggerOptions = {
 const productionConfig: pino.LoggerOptions = {
   ...baseConfig,
 
-  ...(loggerConfig.enableFile && {
+  ...(ENV.LOG_FILE && {
     transport: {
       targets: [
         {

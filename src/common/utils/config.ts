@@ -49,6 +49,8 @@ const envSchema = z
     LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
     LOG_FILE: z.coerce.boolean().default(false),
     MONGO_LOG_ENABLED: z.coerce.boolean().default(false),
+    SLACK_LOG_ENABLED: z.coerce.boolean().default(false),
+    SLACK_WEBHOOK_URL: z.string().url('Invalid Slack Webhook URL').optional(),
 
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().min(1).max(65535).optional(),
@@ -60,8 +62,8 @@ const envSchema = z
     PROMETHEUS_URL: z.string().url().default('http://localhost:9090'),
     WEBSOCKETS_ENABLED: z.coerce.boolean().default(false),
 
-    SWAGGER_USER: z.string().optional().default('admin'),
-    SWAGGER_PASS: z.string().optional().default('password'),
+    SWAGGER_USER: z.string(),
+    SWAGGER_PASS: z.string(),
 
     DEV_EMAIL: z.string().email('Invalid email address')
   })
@@ -87,7 +89,7 @@ try {
 } catch (error) {
   if (error instanceof z.ZodError) {
     console.error('❌ Environment validation failed:');
-    error.errors.forEach(err => {
+    error.issues.forEach(err => {
       console.error(`  • ${err.path.join('.')}: ${err.message}`);
     });
     process.exit(1);
@@ -96,15 +98,6 @@ try {
 }
 
 export { ENV };
-
-export const loggerConfig = {
-  level: ENV.LOG_LEVEL,
-  enableFile: ENV.LOG_FILE,
-  service: {
-    name: ENV.SERVICE_NAME,
-    version: ENV.SERVICE_VERSION
-  }
-};
 
 export const AppSettings = {
   MAX_LOGIN_ATTEMPTS: 3,
@@ -123,4 +116,8 @@ if (ENV.NODE_ENV === 'development') {
   console.log(`Server: ${ENV.HOST}:${ENV.PORT}`);
   console.log(`Service: ${ENV.SERVICE_NAME}@${ENV.SERVICE_VERSION}`);
   console.log(`Clustering: ${ENV.CLUSTER_ENABLED ? 'Enabled' : 'Disabled'}`);
+  console.log(`Slack logging: ${ENV.SLACK_LOG_ENABLED ? 'Enabled' : 'Disabled'}`);
+  console.log(`MongoDB logging: ${ENV.MONGO_LOG_ENABLED ? 'Enabled' : 'Disabled'}`);
+  console.log(`LogFile: ${ENV.LOG_FILE ? 'Enabled' : 'Disabled'}`);
+  console.log(`WebSockets: ${ENV.WEBSOCKETS_ENABLED ? 'Enabled' : 'Disabled'}`);
 }
