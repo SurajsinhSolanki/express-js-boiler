@@ -24,6 +24,8 @@ const envSchema = z
       .string()
       .regex(/^\d+[smhd]$/, 'Invalid JWT expiry format (e.g., 15m, 1h, 7d)')
       .default('15m'),
+    JWT_ISSUER: z.string().default('admin'),
+    JWT_AUDIENCE: z.string().default('users'),
     REFRESH_TOKEN_EXPIRY: z
       .string()
       .regex(/^\d+[smhd]$/, 'Invalid refresh token expiry format')

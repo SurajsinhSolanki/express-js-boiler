@@ -18,7 +18,12 @@ export interface JwtPayload {
  * @returns The generated access token.
  */
 export const generateAccessToken = (payload: JwtPayload): string => {
-  const options: SignOptions = { algorithm: 'RS256', expiresIn: ENV.JWT_EXPIRY as StringValue | number };
+  const options: SignOptions = {
+    algorithm: 'RS256',
+    expiresIn: ENV.JWT_EXPIRY as StringValue | number,
+    issuer: ENV.JWT_ISSUER,
+    audience: ENV.JWT_AUDIENCE
+  };
   return jwt.sign(payload, pvtKey, options);
 };
 
