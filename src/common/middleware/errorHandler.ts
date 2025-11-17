@@ -79,4 +79,9 @@ const errorHandler: ErrorRequestHandler = (err, req, res, _next): void => {
 		.json(ServiceResponse.failure(err.message || "Internal Server Error", null, statusCode));
 };
 
-export default () => [unexpectedRequest, errorHandler];
+const errorMiddleware = (): (RequestHandler | ErrorRequestHandler)[] => [
+	unexpectedRequest,
+	errorHandler,
+];
+
+export default errorMiddleware;
