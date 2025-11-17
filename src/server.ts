@@ -1,26 +1,26 @@
-import express, { type Express } from 'express';
-import { pino } from 'pino';
-import { openAPIRouter } from '@/api-docs/openAPIRouter';
-import { healthCheckRouter } from '@/api/healthCheck/healthCheckRouter';
-import { userRouter } from '@/api/user/userRouter';
-import errorHandler from '@/common/middleware/errorHandler';
-import rateLimiter from '@/common/middleware/rateLimiter';
-import compressionMiddleware from './common/middleware/compression.middleware';
-import corsMiddleware from './common/middleware/cors.middleware';
-import helmetMiddleware from './common/middleware/helmet.middleware';
-import requestLoggerMiddleware from '@/common/middleware/requestLogger';
-import { metricsMiddleware } from './api/monitoring/metrics.middleware';
-import metricsRouter from './api/monitoring/metrics.controller';
-import i18nMiddleware from './common/utils/i18'; // Import i18n middleware
-import { uploadRouter } from '@/api/upload/uploadRouter'; // Import upload router
+import express, { type Express } from "express";
+import { pino } from "pino";
+import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
+import { uploadRouter } from "@/api/upload/uploadRouter"; // Import upload router
+import { userRouter } from "@/api/user/userRouter";
+import { openAPIRouter } from "@/api-docs/openAPIRouter";
+import errorHandler from "@/common/middleware/errorHandler";
+import rateLimiter from "@/common/middleware/rateLimiter";
+import requestLoggerMiddleware from "@/common/middleware/requestLogger";
+import metricsRouter from "./api/monitoring/metrics.controller";
+import { metricsMiddleware } from "./api/monitoring/metrics.middleware";
+import compressionMiddleware from "./common/middleware/compression.middleware";
+import corsMiddleware from "./common/middleware/cors.middleware";
+import helmetMiddleware from "./common/middleware/helmet.middleware";
+import i18nMiddleware from "./common/utils/i18"; // Import i18n middleware
 
-const logger = pino({ name: 'server start' });
+const logger = pino({ name: "server start" });
 const app: Express = express();
 
 app.use(metricsMiddleware);
-app.use('/api', metricsRouter);
+app.use("/api", metricsRouter);
 
-app.set('trust proxy', true);
+app.set("trust proxy", true);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -31,17 +31,18 @@ app.use(rateLimiter);
 
 app.use(i18nMiddleware); // Use i18n middleware
 
-app.use(...requestLoggerMiddleware());
+app.use(requestLoggerMiddleware);
 
-app.use('/api/health-check', healthCheckRouter);
-app.use('/api/v1/users', userRouter);
-app.use('/api/v1/upload', uploadRouter); // Add upload router
+app.use("/api/health-check", healthCheckRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/upload", uploadRouter); // Add upload router
 
 app.use(openAPIRouter);
 
 app.use(errorHandler());
 
-import { createServer } from 'http'; // Import http server
+import { createServer } from "http"; // Import http server
+
 const httpServer = createServer(app); // Create HTTP server from Express app
 
 export { app, logger, httpServer }; // Export httpServer

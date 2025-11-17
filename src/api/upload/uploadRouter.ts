@@ -1,92 +1,118 @@
-import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import express, { type Router } from 'express';
-import multer from 'multer';
-import path from 'path';
-import { uploadController } from './uploadController';
-import { API_ROUTES, VERSION_1 } from '@/common/utils/apiRoutes';
-import { createApiResponse } from '@/api-docs/openAPIResponseBuilders';
-import { z } from 'zod';
+import express, { type Router } from "express";
+import multer from "multer";
+import path from "path";
+import { z } from "zod";
+import { API_VERSION, buildRoute, ROUTES } from "@/constants";
+import { uploadController } from "./uploadController";
 
-export const uploadRegistry = new OpenAPIRegistry();
 export const uploadRouter: Router = express.Router();
 
 // Configure Multer storage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Ensure the 'uploads' directory exists. You might want to make this configurable.
-    const uploadPath = path.join(__dirname, '../../../public/uploads');
-    // In a real application, you'd create this directory if it doesn't exist
-    // fs.mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+	destination: (req, file, cb) => {
+		// Ensure the 'uploads' directory exists. You might want to make this configurable.
+		const uploadPath = path.join(__dirname, "../../../public/uploads");
+		// In a real application, you'd create this directory if it doesn't exist
+		// fs.mkdirSync(uploadPath, { recursive: true });
+		cb(null, uploadPath);
+	},
+	filename: (req, file, cb) => {
+		const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+		cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+	},
 });
 
 const upload = multer({ storage: storage });
 
-// Single file upload endpoint
-uploadRegistry.registerPath({
-  method: 'post',
-  path: VERSION_1 + API_ROUTES.UPLOAD + '/single',
-  tags: ['Upload'],
-  summary: 'Upload a single file',
-  request: {
-    body: {
-      content: {
-        'multipart/form-data': {
-          schema: z.object({
-            file: z.string().openapi({ type: 'string', format: 'binary' })
-          })
-        }
-      }
-    }
-  },
-  responses: createApiResponse(
-    z.object({
-      filename: z.string(),
-      originalname: z.string(),
-      mimetype: z.string(),
-      size: z.number(),
-      path: z.string()
-    }),
-    'File uploaded successfully'
-  )
-});
+uploadRouter.post(
+	buildRoute(ROUTES.UPLOAD, "/single"),
+	upload.single("file"),
+	uploadController.uploadSingleFile,
+);
 
-uploadRouter.post(API_ROUTES.UPLOAD + '/single', upload.single('file'), uploadController.uploadSingleFile);
+uploadRouter.post(
+	buildRoute(ROUTES.UPLOAD, "/multiple"),
+	upload.array("files", 10),
+	uploadController.uploadMultipleFiles,
+); // Max 10 files
 
-// Multiple files upload endpoint
-uploadRegistry.registerPath({
-  method: 'post',
-  path: VERSION_1 + API_ROUTES.UPLOAD + '/multiple',
-  tags: ['Upload'],
-  summary: 'Upload multiple files',
-  request: {
-    body: {
-      content: {
-        'multipart/form-data': {
-          schema: z.object({
-            files: z.array(z.string().openapi({ type: 'string', format: 'binary' }))
-          })
-        }
-      }
-    }
-  },
-  responses: createApiResponse(
-    z.array(
-      z.object({
-        filename: z.string(),
-        originalname: z.string(),
-        mimetype: z.string(),
-        size: z.number(),
-        path: z.string()
-      })
-    ),
-    'Files uploaded successfully'
-  )
-});
-
-uploadRouter.post(API_ROUTES.UPLOAD + '/multiple', upload.array('files', 10), uploadController.uploadMultipleFiles); // Max 10 files
+export const uploadPaths = {
+	[buildRoute(API_VERSION.V1, ROUTES.UPLOAD, "/single")]: {
+		post: {
+			tags: ["Upload"],
+			summary: "Upload a single file",
+			requestBody: {
+				content: {
+					"multipart/form-data": {
+						schema: {
+							type: "object",
+							properties: {
+								file: { type: "string", format: "binary" },
+							},
+							required: ["file"],
+						},
+					},
+				},
+			},
+			responses: {
+				200: {
+					description: "File uploaded successfully",
+					content: {
+						"application/json": {
+							schema: z.object({
+								filename: z.string(),
+								originalname: z.string(),
+								mimetype: z.string(),
+								size: z.number(),
+								path: z.string(),
+							}),
+						},
+					},
+				},
+			},
+		},
+	},
+	[buildRoute(API_VERSION.V1, ROUTES.UPLOAD, "/multiple")]: {
+		post: {
+			tags: ["Upload"],
+			summary: "Upload multiple files",
+			requestBody: {
+				content: {
+					"multipart/form-data": {
+						schema: {
+							type: "object" as const,
+							properties: {
+								files: {
+									type: "array" as const,
+									items: {
+										type: "string" as const,
+										format: "binary" as const,
+									},
+								},
+							},
+							required: ["files"],
+						},
+					},
+				},
+			},
+			responses: {
+				200: {
+					description: "Files uploaded successfully",
+					content: {
+						"application/json": {
+							schema: z.array(
+								z.object({
+									filename: z.string(),
+									originalname: z.string(),
+									mimetype: z.string(),
+									size: z.number(),
+									path: z.string(),
+								}),
+							),
+						},
+					},
+				},
+			},
+		},
+	},
+};
