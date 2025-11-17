@@ -1,8 +1,8 @@
 {
-  "welcome": "¡Bienvenido a nuestra API!",
-  "greeting": "¡Hola, {{name}}!",
-  "error_unauthorized": "No autorizado: se requiere autenticación.",
-  "error_forbidden": "Prohibido: permisos insuficientes.",
-  "user_not_found": "Usuario no encontrado.",
-  "email_verification_subject": "Verifica tu dirección de correo electrónico"
+	"welcome": "¡Bienvenido a nuestra API!",
+	"greeting": "¡Hola, {{name}}!",
+	"error_unauthorized": "No autorizado: se requiere autenticación.",
+	"error_forbidden": "Prohibido: permisos insuficientes.",
+	"user_not_found": "Usuario no encontrado.",
+	"email_verification_subject": "Verifica tu dirección de correo electrónico"
 }

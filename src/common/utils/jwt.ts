@@ -1,15 +1,15 @@
-import jwt, { SignOptions } from 'jsonwebtoken';
-import { ENV } from '@/common/utils/config';
-import { pvtKey, pblKey } from '@/common/config/keys';
-import { User } from '@/api/user/userModel';
-import { StringValue } from 'ms';
+import jwt, { type SignOptions } from "jsonwebtoken";
+import type { StringValue } from "ms";
+import type { User } from "@/api/user/userModel";
+import { pblKey, pvtKey } from "@/common/config/keys";
+import { ENV } from "@/common/utils/config";
 
 export interface JwtPayload {
-  userId: number;
-  email?: string;
-  phoneNumber?: string;
-  isAdmin: boolean;
-  role: 'admin' | 'user';
+	userId: number;
+	email?: string;
+	phoneNumber?: string;
+	isAdmin: boolean;
+	role: "admin" | "user";
 }
 
 /**
@@ -18,13 +18,13 @@ export interface JwtPayload {
  * @returns The generated access token.
  */
 export const generateAccessToken = (payload: JwtPayload): string => {
-  const options: SignOptions = {
-    algorithm: 'RS256',
-    expiresIn: ENV.JWT_EXPIRY as StringValue | number,
-    issuer: ENV.JWT_ISSUER,
-    audience: ENV.JWT_AUDIENCE
-  };
-  return jwt.sign(payload, pvtKey, options);
+	const options: SignOptions = {
+		algorithm: "RS256",
+		expiresIn: ENV.JWT_EXPIRY as StringValue | number,
+		issuer: ENV.JWT_ISSUER,
+		audience: ENV.JWT_AUDIENCE,
+	};
+	return jwt.sign(payload, pvtKey, options);
 };
 
 /**
@@ -33,8 +33,11 @@ export const generateAccessToken = (payload: JwtPayload): string => {
  * @returns The generated refresh token.
  */
 export const generateRefreshToken = (payload: JwtPayload): string => {
-  const options: SignOptions = { algorithm: 'RS256', expiresIn: ENV.REFRESH_TOKEN_EXPIRY as StringValue | number };
-  return jwt.sign(payload, pvtKey, options);
+	const options: SignOptions = {
+		algorithm: "RS256",
+		expiresIn: ENV.REFRESH_TOKEN_EXPIRY as StringValue | number,
+	};
+	return jwt.sign(payload, pvtKey, options);
 };
 
 /**
@@ -43,11 +46,11 @@ export const generateRefreshToken = (payload: JwtPayload): string => {
  * @returns The decoded payload if verification is successful, null otherwise.
  */
 export const verifyRefreshToken = (token: string): JwtPayload | null => {
-  try {
-    return jwt.verify(token, pblKey) as JwtPayload;
-  } catch {
-    return null;
-  }
+	try {
+		return jwt.verify(token, pblKey) as JwtPayload;
+	} catch {
+		return null;
+	}
 };
 
 /**
@@ -56,11 +59,11 @@ export const verifyRefreshToken = (token: string): JwtPayload | null => {
  * @returns The decoded payload if verification is successful, null otherwise.
  */
 export const verifyAccessToken = (token: string): JwtPayload | null => {
-  try {
-    return jwt.verify(token, pblKey) as JwtPayload;
-  } catch {
-    return null;
-  }
+	try {
+		return jwt.verify(token, pblKey) as JwtPayload;
+	} catch {
+		return null;
+	}
 };
 
 /**
@@ -69,11 +72,11 @@ export const verifyAccessToken = (token: string): JwtPayload | null => {
  * @returns The JWT payload.
  */
 export const extractJwtPayload = (user: User): JwtPayload => {
-  return {
-    userId: user.id,
-    email: user.email || undefined,
-    phoneNumber: user.phoneNumber || undefined,
-    isAdmin: user.isAdmin,
-    role: user.isAdmin ? 'admin' : 'user'
-  };
+	return {
+		userId: user.id,
+		email: user.email || undefined,
+		phoneNumber: user.phoneNumber || undefined,
+		isAdmin: user.isAdmin,
+		role: user.isAdmin ? "admin" : "user",
+	};
 };

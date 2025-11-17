@@ -1,4 +1,4 @@
-import net from "net";
+import net from "node:net";
 import { ENV } from "@/common/utils/config";
 import { httpServer, logger } from "@/server"; // Import httpServer
 import { connectMongoose, disconnectMongoose } from "./common/config/database";

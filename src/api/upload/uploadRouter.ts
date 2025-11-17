@@ -1,6 +1,6 @@
+import path from "node:path";
 import express, { type Router } from "express";
 import multer from "multer";
-import path from "path";
 import { z } from "zod";
 import { API_VERSION, buildRoute, ROUTES } from "@/constants";
 import { uploadController } from "./uploadController";
@@ -9,16 +9,16 @@ export const uploadRouter: Router = express.Router();
 
 // Configure Multer storage
 const storage = multer.diskStorage({
-	destination: (req, file, cb) => {
+	destination: (_req, _file, cb) => {
 		// Ensure the 'uploads' directory exists. You might want to make this configurable.
 		const uploadPath = path.join(__dirname, "../../../public/uploads");
 		// In a real application, you'd create this directory if it doesn't exist
 		// fs.mkdirSync(uploadPath, { recursive: true });
 		cb(null, uploadPath);
 	},
-	filename: (req, file, cb) => {
-		const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-		cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+	filename: (_req, file, cb) => {
+		const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+		cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
 	},
 });
 

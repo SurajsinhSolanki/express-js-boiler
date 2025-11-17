@@ -29,3 +29,6 @@ dist-ssr
 *.sw?
 
 generated/prisma
+
+drizzle/_meta/
+drizzle/meta/

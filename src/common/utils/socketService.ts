@@ -1,47 +1,47 @@
-import { Server as SocketIOServer, Socket } from 'socket.io';
-import { Server as HttpServer } from 'http';
-import { createChildLogger } from './logger';
-import { ENV } from './config';
+import type { Server as HttpServer } from "node:http";
+import { type Socket, Server as SocketIOServer } from "socket.io";
+import { ENV } from "./config";
+import { createChildLogger } from "./logger";
 
-const logger = createChildLogger('socket-service');
+const logger = createChildLogger("socket-service");
 
 let io: SocketIOServer | null = null;
 
 export const initializeSocketIO = (httpServer: HttpServer): SocketIOServer => {
-  if (io) {
-    logger.warn('Socket.IO already initialized. Returning existing instance.');
-    return io;
-  }
+	if (io) {
+		logger.warn("Socket.IO already initialized. Returning existing instance.");
+		return io;
+	}
 
-  io = new SocketIOServer(httpServer, {
-    cors: {
-      origin: ENV.CORS_ORIGIN === '*' ? '*' : ENV.ALLOWED_ORIGINS.split(','),
-      methods: ['GET', 'POST']
-    }
-  });
+	io = new SocketIOServer(httpServer, {
+		cors: {
+			origin: ENV.CORS_ORIGIN === "*" ? "*" : ENV.ALLOWED_ORIGINS.split(","),
+			methods: ["GET", "POST"],
+		},
+	});
 
-  io.on('connection', (socket: Socket) => {
-    logger.info(`Socket connected: ${socket.id}`);
+	io.on("connection", (socket: Socket) => {
+		logger.info(`Socket connected: ${socket.id}`);
 
-    socket.on('message', (message: string) => {
-      logger.info(`Received message from ${socket.id}: ${message}`);
-      io?.emit('message', `Server received: ${message}`); // Broadcast message to all connected clients
-    });
+		socket.on("message", (message: string) => {
+			logger.info(`Received message from ${socket.id}: ${message}`);
+			io?.emit("message", `Server received: ${message}`); // Broadcast message to all connected clients
+		});
 
-    socket.on('disconnect', () => {
-      logger.info(`Socket disconnected: ${socket.id}`);
-    });
-  });
+		socket.on("disconnect", () => {
+			logger.info(`Socket disconnected: ${socket.id}`);
+		});
+	});
 
-  logger.info('Socket.IO initialized.');
-  return io;
+	logger.info("Socket.IO initialized.");
+	return io;
 };
 
 export const getSocketIOInstance = (): SocketIOServer => {
-  if (!io) {
-    throw new Error('Socket.IO not initialized. Call initializeSocketIO first.');
-  }
-  return io;
+	if (!io) {
+		throw new Error("Socket.IO not initialized. Call initializeSocketIO first.");
+	}
+	return io;
 };
 
 // Example of another instance or namespace if needed

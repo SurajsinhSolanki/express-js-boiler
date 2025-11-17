@@ -7,9 +7,8 @@ import {
 	UpdateUserSchema,
 	UserSchema,
 } from "@/api/user/userModel";
-import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
-import { authenticate } from "@/common/middleware/authMiddleware"; // Import auth middleware
-import { authorizeRoles } from "@/common/middleware/roleMiddleware"; // Import new role middleware
+import { authenticate } from "@/common/middleware/authMiddleware";
+import { authorizeRoles } from "@/common/middleware/roleMiddleware";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { API_VERSION, buildRoute, ROUTES, UserRole } from "@/constants";
 import { userController } from "./userController";
@@ -100,7 +99,7 @@ export const userPaths = {
 			},
 		},
 	},
-	[buildRoute(API_VERSION.V1, ROUTES.USERS) + "/admin/all"]: {
+	[`${buildRoute(API_VERSION.V1, ROUTES.USERS)}/admin/all`]: {
 		get: {
 			tags: ["User", "Admin"],
 			summary: "Get all users (Admin only)",
@@ -117,7 +116,7 @@ export const userPaths = {
 			},
 		},
 	},
-	[buildRoute(API_VERSION.V1, ROUTES.USERS) + ROUTES.ID]: {
+	[`${buildRoute(API_VERSION.V1, ROUTES.USERS)}${ROUTES.ID}`]: {
 		get: {
 			tags: ["User"],
 			security: [{ BearerAuth: [] }],
@@ -192,7 +191,7 @@ export const userPaths = {
 			},
 		},
 	},
-	[buildRoute(API_VERSION.V1, ROUTES.USERS) + "/email/{email}"]: {
+	[`${buildRoute(API_VERSION.V1, ROUTES.USERS)}/email/{email}`]: {
 		get: {
 			tags: ["User"],
 			security: [{ BearerAuth: [] }],
@@ -216,7 +215,7 @@ export const userPaths = {
 			},
 		},
 	},
-	[buildRoute(API_VERSION.V1, ROUTES.USERS) + "/phone-number/{phoneNumber}"]: {
+	[`${buildRoute(API_VERSION.V1, ROUTES.USERS)}/phone-number/{phoneNumber}`]: {
 		get: {
 			tags: ["User"],
 			security: [{ BearerAuth: [] }],

@@ -349,11 +349,7 @@ export class UserService {
 		}
 	}
 
-	async login(credentials: {
-		email?: string;
-		phoneNumber?: string;
-		password: string;
-	}): Promise<
+	async login(credentials: { email?: string; phoneNumber?: string; password: string }): Promise<
 		ServiceResponse<{
 			user: Omit<User, "password">;
 			accessToken: string;
@@ -443,7 +439,7 @@ export class UserService {
 				storedRefreshToken.expiresAt < new Date()
 			) {
 				// If token is found but revoked/expired, or not found, consider it invalid
-				if (storedRefreshToken && storedRefreshToken.isUsed) {
+				if (storedRefreshToken?.isUsed) {
 					this.userLogger.warn(
 						`Attempt to use a revoked refresh token for user ID: ${decodedRefreshToken.userId}`,
 					);

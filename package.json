@@ -20,7 +20,12 @@
     "prepare": "husky",
     "coverage": "vitest run --coverage",
     "sonar": "pnpm run coverage && sonar-scanner",
-    "test": "vitest"
+    "test": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:drop": "drizzle-kit drop",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "axios": "^1.13.2",

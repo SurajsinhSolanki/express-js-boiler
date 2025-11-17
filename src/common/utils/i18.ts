@@ -1,7 +1,7 @@
+import path from "node:path";
 import type { RequestHandler } from "express";
 import i18next from "i18next";
 import i18nextHttpMiddleware from "i18next-http-middleware";
-import path from "path";
 
 // Configure i18next
 i18next.use(i18nextHttpMiddleware.LanguageDetector).init({

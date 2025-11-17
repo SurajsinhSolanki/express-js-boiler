@@ -1,3 +1,4 @@
+import { createServer } from "node:http"; // Import http server
 import express, { type Express } from "express";
 import { pino } from "pino";
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
@@ -40,8 +41,6 @@ app.use("/api/v1/upload", uploadRouter); // Add upload router
 app.use(openAPIRouter);
 
 app.use(errorHandler());
-
-import { createServer } from "http"; // Import http server
 
 const httpServer = createServer(app); // Create HTTP server from Express app
 
